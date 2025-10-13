@@ -11,6 +11,9 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
+
   create_table "authors", force: :cascade do |t|
     t.string "first_name"
     t.string "last_name"
@@ -23,8 +26,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
     t.string "title"
     t.text "summary"
     t.date "published_at"
-    t.integer "author_id", null: false
-    t.integer "category_id", null: false
+    t.bigint "author_id", null: false
+    t.bigint "category_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["author_id"], name: "index_books_on_author_id"
@@ -39,8 +42,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
   end
 
   create_table "loans", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "book_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
     t.datetime "borrowed_at"
     t.datetime "returned_at"
     t.datetime "created_at", null: false
