@@ -27,7 +27,7 @@ gem "jbuilder"
 # gem "bcrypt", "~> 3.1.7"
 
 gem "pg"
-gem 'dotenv'
+gem 'dotenv-rails'
 
 gem "forest_admin_rails"
 gem "forest_admin_agent"

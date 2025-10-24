@@ -1,10 +1,10 @@
 {
   "meta": {
     "liana": "agent-ruby",
-    "liana_version": "1.8.1",
+    "liana_version": "1.8.3",
     "stack": {
       "engine": "ruby",
-      "engine_version": "3.3.8"
+      "engine_version": "3.3.6"
     }
   },
   "collections": [
