@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_24_132731) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -42,33 +42,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
     t.index ["company_id"], name: "idx_transactions_company_id"
   end
 
-  create_table "authors", force: :cascade do |t|
-    t.string "first_name"
-    t.string "last_name"
-    t.text "bio"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "books", force: :cascade do |t|
-    t.string "title"
-    t.text "summary"
-    t.date "published_at"
-    t.bigint "author_id", null: false
-    t.bigint "category_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["author_id"], name: "index_books_on_author_id"
-    t.index ["category_id"], name: "index_books_on_category_id"
-  end
-
-  create_table "categories", force: :cascade do |t|
-    t.string "name"
-    t.text "description"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "companies", id: :serial, force: :cascade do |t|
     t.string "company_name", limit: 255, null: false
     t.string "siret", limit: 14, null: false
@@ -87,6 +60,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
     t.decimal "credit_limit_eur", precision: 12, scale: 2
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.datetime "updated_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
+    t.string "logo_url"
+    t.string "iban", limit: 34
+    t.decimal "annual_revenue", precision: 15, scale: 2
+    t.integer "employee_count"
+    t.date "registration_date"
+    t.index ["iban"], name: "index_companies_on_iban"
     t.index ["kyc_status"], name: "idx_companies_kyc_status"
     t.index ["status"], name: "idx_companies_status"
     t.unique_constraint ["siret"], name: "companies_siret_key"
@@ -110,7 +89,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
     t.text "rejection_reason"
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.datetime "updated_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
+    t.boolean "documents_received", default: false
+    t.integer "risk_score"
     t.index ["company_id"], name: "idx_factoring_company_id"
+    t.index ["documents_received"], name: "index_factoring_operations_on_documents_received"
     t.index ["status"], name: "idx_factoring_status"
   end
 
@@ -130,20 +112,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
     t.integer "payment_delay_days", default: 0
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.datetime "updated_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
+    t.string "chorus_pro_status", limit: 50
+    t.string "chorus_pro_id", limit: 100
+    t.string "document_url"
+    t.index ["chorus_pro_id"], name: "index_invoices_on_chorus_pro_id", unique: true
+    t.index ["chorus_pro_status"], name: "index_invoices_on_chorus_pro_status"
     t.index ["company_id"], name: "idx_invoices_company_id"
     t.index ["payment_status"], name: "idx_invoices_payment_status"
     t.unique_constraint ["invoice_number"], name: "invoices_invoice_number_key"
-  end
-
-  create_table "loans", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "book_id", null: false
-    t.datetime "borrowed_at"
-    t.datetime "returned_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["book_id"], name: "index_loans_on_book_id"
-    t.index ["user_id"], name: "index_loans_on_user_id"
   end
 
   create_table "project_participants", id: :serial, force: :cascade do |t|
@@ -170,6 +146,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
     t.string "status", limit: 50, default: "planned"
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.datetime "updated_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
+    t.integer "progress_percentage", default: 0
+    t.string "contracting_authority_type", limit: 50
+    t.index ["contracting_authority_type"], name: "index_projects_on_contracting_authority_type"
     t.index ["status"], name: "idx_projects_status"
   end
 
@@ -190,23 +169,11 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_13_081725) do
     t.index ["status"], name: "idx_guarantees_status"
   end
 
-  create_table "users", force: :cascade do |t|
-    t.string "first_name"
-    t.string "last_name"
-    t.string "email"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   add_foreign_key "account_transactions", "companies", name: "account_transactions_company_id_fkey", on_delete: :cascade
-  add_foreign_key "books", "authors"
-  add_foreign_key "books", "categories"
   add_foreign_key "factoring_operations", "companies", name: "factoring_operations_company_id_fkey", on_delete: :cascade
   add_foreign_key "factoring_operations", "invoices", name: "factoring_operations_invoice_id_fkey", on_delete: :cascade
   add_foreign_key "invoices", "companies", name: "invoices_company_id_fkey", on_delete: :cascade
   add_foreign_key "invoices", "projects", name: "invoices_project_id_fkey", on_delete: :cascade
-  add_foreign_key "loans", "books"
-  add_foreign_key "loans", "users"
   add_foreign_key "project_participants", "companies", name: "project_participants_company_id_fkey", on_delete: :cascade
   add_foreign_key "project_participants", "projects", name: "project_participants_project_id_fkey", on_delete: :cascade
   add_foreign_key "retention_guarantees", "companies", name: "retention_guarantees_company_id_fkey", on_delete: :cascade
