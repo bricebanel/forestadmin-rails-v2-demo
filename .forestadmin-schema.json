@@ -1,7 +1,7 @@
 {
   "meta": {
     "liana": "agent-ruby",
-    "liana_version": "1.8.3",
+    "liana_version": "1.12.5",
     "stack": {
       "engine": "ruby",
       "engine_version": "3.3.6"
