@@ -214,7 +214,74 @@
       "segments": []
     },
     {
-      "actions": [],
+      "actions": [
+        {
+          "id": "Company-0-approve-onboarding",
+          "name": "Approve Onboarding",
+          "submitButtonLabel": "✅ Approve & Activate",
+          "description": "Approve company onboarding and activate their account",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/Company/0/approve-onboarding",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Set the credit limit for this company",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "approved_credit_limit",
+              "label": "Approved Credit Limit (€)",
+              "widgetEdit": null,
+              "type": "Number",
+              "defaultValue": null
+            },
+            {
+              "description": "Explain why this credit limit was approved",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "justification",
+              "label": "Justification Notes",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            },
+            {
+              "description": "Allow this company to use invoice factoring",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "enable_factoring",
+              "label": "Enable Factoring Service",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": true
+            },
+            {
+              "description": "Allow this company to request retention guarantees",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "enable_guarantees",
+              "label": "Enable Guarantees Service",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": true
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
+        }
+      ],
       "fields": [
         {
           "defaultValue": null,
