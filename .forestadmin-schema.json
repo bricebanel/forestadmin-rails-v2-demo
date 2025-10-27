@@ -282,6 +282,42 @@
           }
         },
         {
+          "id": "Company-2-escalate",
+          "name": "Escalate",
+          "submitButtonLabel": "⚠️ Escalate",
+          "description": "Escalate company onboarding for additional review",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/Company/2/escalate",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Explain why this company needs escalation",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "escalation_reason",
+              "label": "Escalation Reason",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
+        },
+        {
           "id": "Company-1-reject-onboarding",
           "name": "Reject Onboarding",
           "submitButtonLabel": "❌ Deny Onboarding",
@@ -602,7 +638,7 @@
         {
           "defaultValue": "pending",
           "enums": [
-            "in_progress",
+            "escalated",
             "pending",
             "rejected",
             "validated"

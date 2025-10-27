@@ -62,8 +62,8 @@ module ForestAdminRails
             company = Company.find(company_record['id'])
 
             # Validate company state
-            unless ['pending', 'in_progress'].include?(company.kyc_status)
-              next result_builder.error(message: "❌ Cannot approve: Company KYC status is '#{company.kyc_status}'. Only 'pending' or 'in_progress' companies can be approved.")
+            unless ['pending', 'escalated'].include?(company.kyc_status)
+              next result_builder.error(message: "❌ Cannot approve: Company KYC status is '#{company.kyc_status}'. Only 'pending' or 'escalated' companies can be approved.")
             end
 
             # Get form values
@@ -148,6 +148,52 @@ module ForestAdminRails
                        "Status: Suspended\n" \
                        "Reason: #{rejection_reason}\n\n" \
                        "#{notification_status}"
+            )
+          end
+        )
+
+        # Add "Escalate" smart action to Company collection
+        collection.add_action(
+          'Escalate',
+          BaseAction.new(
+            scope: ActionScope::SINGLE,
+            description: "Escalate company onboarding for additional review",
+            submit_button_label: "⚠️ Escalate",
+            form: [
+              {
+                type: FieldType::STRING,
+                label: "Escalation Reason",
+                id: "escalation_reason",
+                description: "Explain why this company needs escalation",
+                is_required: true,
+                widget: 'TextArea'
+              }
+            ]
+          ) do |context, result_builder|
+            # 1. Fetch the company data from Forest Admin
+            company_record = context.get_record(['id', 'company_name', 'kyc_status'])
+
+            # 2. Get the ActiveRecord model instance
+            company = Company.find(company_record['id'])
+
+            # 3. Get form values
+            escalation_reason = context.get_form_value('escalation_reason')
+
+            # 4. Update company kyc_status to escalated
+            company.update!(kyc_status: 'escalated')
+
+            # 5. Log the escalation action
+            Rails.logger.info(
+              "Company onboarding escalated: #{company.company_name} (ID: #{company.id}) - " \
+              "Reason: #{escalation_reason}"
+            )
+
+            # 6. Return success message
+            result_builder.success(
+              message: "⚠️ #{company.company_name} has been escalated for review.\n\n" \
+                       "KYC Status: Escalated\n" \
+                       "Reason: #{escalation_reason}\n\n" \
+                       "This company will require additional documentation or verification before approval."
             )
           end
         )

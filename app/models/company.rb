@@ -31,7 +31,7 @@ class Company < ApplicationRecord
 
   enum kyc_status: {
     pending: 'pending',
-    in_progress: 'in_progress',
+    escalated: 'escalated',
     validated: 'validated',
     rejected: 'rejected'
   }, _prefix: true
