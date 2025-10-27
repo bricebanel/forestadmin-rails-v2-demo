@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 puts "🧹 Nettoyage de la base de données..."
+KycDocument.destroy_all
 AccountTransaction.destroy_all
 RetentionGuarantee.destroy_all
 FactoringOperation.destroy_all
@@ -1673,3 +1674,156 @@ puts "  • #{Invoice.where(invoice_type: ["solde"]).count} factures solde"
 puts "  • #{Invoice.where(payment_status: "partially_paid").count} factures partiellement payées"
 puts "  • #{more_factoring.count} opérations d'affacturage distribuées"
 puts "  • #{additional_transactions.count} transactions additionnelles"
+
+puts "\n📄 Création des documents KYC pour les entreprises en cours d'onboarding..."
+
+# Get companies in onboarding states
+onboarding_companies = companies.select { |c| ['pending', 'escalated'].include?(c.kyc_status) }
+
+kyc_documents = []
+
+# Helper to generate document URL
+def generate_doc_url(company_id, doc_type)
+  timestamp = Time.now.to_i
+  "https://faktus-kyc-documents.s3.eu-west-1.amazonaws.com/company-#{company_id}/#{doc_type}-#{timestamp}.pdf"
+end
+
+onboarding_companies.each do |company|
+  base_upload_date = company.created_at || 30.days.ago
+
+  # Common documents for all companies
+  common_docs = [
+    {
+      document_type: 'kbis',
+      status: 'approved',
+      uploaded_at: base_upload_date + rand(1..5).days,
+      reviewed_at: base_upload_date + rand(6..10).days,
+      reviewed_by: 'admin@faktus.fr',
+      file_size_kb: rand(100..300),
+      notes: 'K-bis de moins de 3 mois - Conforme'
+    },
+    {
+      document_type: 'rib',
+      status: 'approved',
+      uploaded_at: base_upload_date + rand(1..5).days,
+      reviewed_at: base_upload_date + rand(6..10).days,
+      reviewed_by: 'admin@faktus.fr',
+      file_size_kb: rand(50..150),
+      notes: 'RIB vérifié avec l\'IBAN fourni'
+    },
+    {
+      document_type: 'carte_identite',
+      status: 'approved',
+      uploaded_at: base_upload_date + rand(1..5).days,
+      reviewed_at: base_upload_date + rand(6..10).days,
+      reviewed_by: 'admin@faktus.fr',
+      file_size_kb: rand(200..400),
+      notes: 'CNI du gérant - En cours de validité'
+    }
+  ]
+
+  # Status-specific documents
+  if company.kyc_status == 'pending'
+    # Pending: all documents in pending_review status
+    status_docs = [
+      {
+        document_type: 'attestation_vigilance',
+        status: 'pending_review',
+        uploaded_at: base_upload_date + rand(1..3).days,
+        file_size_kb: rand(150..350),
+        notes: 'En attente de vérification'
+      },
+      {
+        document_type: 'rcc',
+        status: 'pending_review',
+        uploaded_at: base_upload_date + rand(1..3).days,
+        file_size_kb: rand(200..500),
+        expiry_date: 1.year.from_now,
+        notes: 'RC Pro en cours de validation'
+      },
+      {
+        document_type: 'bilan',
+        status: 'pending_review',
+        uploaded_at: base_upload_date + rand(1..3).days,
+        file_size_kb: rand(500..1200),
+        notes: 'Bilan comptable N-1 à vérifier'
+      },
+      {
+        document_type: 'decennale',
+        status: 'pending_review',
+        uploaded_at: base_upload_date + rand(1..3).days,
+        file_size_kb: rand(300..600),
+        expiry_date: 1.year.from_now + 6.months,
+        notes: 'Assurance décennale à valider'
+      }
+    ]
+  elsif company.kyc_status == 'escalated'
+    # Escalated: mix of approved, rejected, and pending documents
+    status_docs = [
+      {
+        document_type: 'attestation_vigilance',
+        status: 'rejected',
+        uploaded_at: base_upload_date + rand(1..5).days,
+        reviewed_at: base_upload_date + rand(6..10).days,
+        reviewed_by: 'admin@faktus.fr',
+        file_size_kb: rand(150..350),
+        rejection_reason: 'Document expiré - Date de validité dépassée. Merci de fournir une attestation à jour.',
+        notes: 'URSSAF - Document périmé'
+      },
+      {
+        document_type: 'rcc',
+        status: 'approved',
+        uploaded_at: base_upload_date + rand(1..5).days,
+        reviewed_at: base_upload_date + rand(6..10).days,
+        reviewed_by: 'admin@faktus.fr',
+        file_size_kb: rand(200..500),
+        expiry_date: 9.months.from_now,
+        notes: 'RC Pro validée - Montant de garantie: 2M€'
+      },
+      {
+        document_type: 'bilan',
+        status: 'rejected',
+        uploaded_at: base_upload_date + rand(1..5).days,
+        reviewed_at: base_upload_date + rand(6..10).days,
+        reviewed_by: 'admin@faktus.fr',
+        file_size_kb: rand(500..1200),
+        rejection_reason: 'Bilan incomplet - Il manque les annexes et le compte de résultat détaillé.',
+        notes: 'Bilan N-1 incomplet'
+      },
+      {
+        document_type: 'decennale',
+        status: 'pending_review',
+        uploaded_at: base_upload_date + rand(1..3).days,
+        file_size_kb: rand(300..600),
+        expiry_date: 8.months.from_now,
+        notes: 'Nouvelle version soumise suite à rejet'
+      },
+      {
+        document_type: 'qualibat',
+        status: 'approved',
+        uploaded_at: base_upload_date + rand(1..5).days,
+        reviewed_at: base_upload_date + rand(6..10).days,
+        reviewed_by: 'admin@faktus.fr',
+        file_size_kb: rand(200..400),
+        expiry_date: 2.years.from_now,
+        notes: 'Certification Qualibat valide'
+      }
+    ]
+  end
+
+  # Create all documents for this company
+  (common_docs + status_docs).each do |doc_data|
+    kyc_documents << KycDocument.create!(
+      company: company,
+      document_url: generate_doc_url(company.id, doc_data[:document_type]),
+      **doc_data
+    )
+  end
+end
+
+puts "✅ Documents KYC créés:"
+puts "  • #{kyc_documents.count} documents au total"
+puts "  • #{KycDocument.where(status: 'pending_review').count} en attente de revue"
+puts "  • #{KycDocument.where(status: 'approved').count} approuvés"
+puts "  • #{KycDocument.where(status: 'rejected').count} rejetés"
+puts "  • Pour #{onboarding_companies.count} entreprises en cours d'onboarding"

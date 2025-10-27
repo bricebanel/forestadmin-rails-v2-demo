@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_27_110733) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_27_112441) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -122,6 +122,25 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_27_110733) do
     t.unique_constraint ["invoice_number"], name: "invoices_invoice_number_key"
   end
 
+  create_table "kyc_documents", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "document_type", limit: 50, null: false
+    t.string "document_url", limit: 500, null: false
+    t.string "status", limit: 50, default: "pending_review"
+    t.datetime "uploaded_at", default: -> { "CURRENT_TIMESTAMP" }
+    t.datetime "reviewed_at"
+    t.string "reviewed_by", limit: 255
+    t.date "expiry_date"
+    t.text "rejection_reason"
+    t.text "notes"
+    t.integer "file_size_kb"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_kyc_documents_on_company_id"
+    t.index ["document_type"], name: "index_kyc_documents_on_document_type"
+    t.index ["status"], name: "index_kyc_documents_on_status"
+  end
+
   create_table "project_participants", id: :serial, force: :cascade do |t|
     t.integer "project_id"
     t.integer "company_id"
@@ -174,6 +193,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_27_110733) do
   add_foreign_key "factoring_operations", "invoices", name: "factoring_operations_invoice_id_fkey", on_delete: :cascade
   add_foreign_key "invoices", "companies", name: "invoices_company_id_fkey", on_delete: :cascade
   add_foreign_key "invoices", "projects", name: "invoices_project_id_fkey", on_delete: :cascade
+  add_foreign_key "kyc_documents", "companies"
   add_foreign_key "project_participants", "companies", name: "project_participants_company_id_fkey", on_delete: :cascade
   add_foreign_key "project_participants", "projects", name: "project_participants_project_id_fkey", on_delete: :cascade
   add_foreign_key "retention_guarantees", "companies", name: "retention_guarantees_company_id_fkey", on_delete: :cascade

@@ -6,6 +6,7 @@ class Company < ApplicationRecord
   has_many :account_transactions, dependent: :destroy
   has_many :project_participants, dependent: :destroy
   has_many :projects, through: :project_participants
+  has_many :kyc_documents, dependent: :destroy
 
   # Validations
   validates :company_name, presence: true, length: { maximum: 255 }
@@ -32,6 +33,7 @@ class Company < ApplicationRecord
   enum kyc_status: {
     pending: 'pending',
     escalated: 'escalated',
+    waiting_on_customer: 'waiting_on_customer',
     validated: 'validated',
     rejected: 'rejected'
   }, _prefix: true

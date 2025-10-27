@@ -362,6 +362,203 @@
               "changeHook"
             ]
           }
+        },
+        {
+          "id": "Company-3-request-more-info",
+          "name": "Request More Info",
+          "submitButtonLabel": "📨 Request More Info",
+          "description": "Request additional information or documents from the customer",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/Company/3/request-more-info",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Extract K-bis de moins de 3 mois",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_kbis",
+              "label": "📋 K-bis (company registration)",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Relevé d'identité bancaire",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_rib",
+              "label": "🏦 RIB (bank details)",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Carte d'identité du gérant",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_carte_identite",
+              "label": "🪪 ID Card of legal representative",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Attestation de vigilance URSSAF à jour",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_attestation_vigilance",
+              "label": "📜 URSSAF Certificate",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Assurance responsabilité civile professionnelle",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_rcc",
+              "label": "🛡️ Professional Liability Insurance (RCC)",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Bilan comptable de l'année N-1",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_bilan",
+              "label": "📊 Financial Statements (Bilan)",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Assurance décennale pour le BTP",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_decennale",
+              "label": "🏗️ 10-Year Insurance (Décennale)",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Certification Qualibat",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_qualibat",
+              "label": "⭐ Qualibat Certification (optional)",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Statuts de l'entreprise",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "missing_statuts",
+              "label": "📄 Company Statutes",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Any additional information or specific requirements",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "additional_notes",
+              "label": "Additional notes (optional)",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          },
+          "layout": [
+            {
+              "component": "htmlBlock",
+              "content": "<p><strong>Please select the documents that are missing</strong> (these will be requested from the customer):</p>"
+            },
+            {
+              "component": "row",
+              "fields": [
+                {
+                  "component": "input",
+                  "fieldId": "missing_kbis"
+                },
+                {
+                  "component": "input",
+                  "fieldId": "missing_rib"
+                }
+              ]
+            },
+            {
+              "component": "row",
+              "fields": [
+                {
+                  "component": "input",
+                  "fieldId": "missing_carte_identite"
+                },
+                {
+                  "component": "input",
+                  "fieldId": "missing_attestation_vigilance"
+                }
+              ]
+            },
+            {
+              "component": "row",
+              "fields": [
+                {
+                  "component": "input",
+                  "fieldId": "missing_rcc"
+                },
+                {
+                  "component": "input",
+                  "fieldId": "missing_bilan"
+                }
+              ]
+            },
+            {
+              "component": "row",
+              "fields": [
+                {
+                  "component": "input",
+                  "fieldId": "missing_decennale"
+                },
+                {
+                  "component": "input",
+                  "fieldId": "missing_qualibat"
+                }
+              ]
+            },
+            {
+              "component": "row",
+              "fields": [
+                {
+                  "component": "input",
+                  "fieldId": "missing_statuts"
+                }
+              ]
+            },
+            {
+              "component": "input",
+              "fieldId": "additional_notes"
+            }
+          ]
         }
       ],
       "fields": [
@@ -636,12 +833,32 @@
           "validations": []
         },
         {
+          "defaultValue": null,
+          "enums": null,
+          "field": "kyc_documents",
+          "integration": null,
+          "inverseOf": "company",
+          "isFilterable": false,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": "KycDocument.id",
+          "relationship": "HasMany",
+          "type": [
+            "Number"
+          ],
+          "validations": []
+        },
+        {
           "defaultValue": "pending",
           "enums": [
             "escalated",
             "pending",
             "rejected",
-            "validated"
+            "validated",
+            "waiting_on_customer"
           ],
           "field": "kyc_status",
           "integration": null,
@@ -1566,6 +1783,264 @@
       "isSearchable": true,
       "isVirtual": false,
       "name": "Invoice",
+      "onlyForRelationships": false,
+      "paginationType": "page",
+      "segments": []
+    },
+    {
+      "actions": [],
+      "fields": [
+        {
+          "defaultValue": null,
+          "enums": null,
+          "field": "company",
+          "integration": null,
+          "inverseOf": "kyc_documents",
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": "Company.id",
+          "relationship": "BelongsTo",
+          "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "created_at",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Date",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [
+            "attestation_assurance",
+            "attestation_vigilance",
+            "autre",
+            "bilan",
+            "carte_identite",
+            "decennale",
+            "kbis",
+            "liasse_fiscale",
+            "qualibat",
+            "rcc",
+            "rib",
+            "statuts"
+          ],
+          "field": "document_type",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Enum",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "document_url",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "expiry_date",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Dateonly",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "file_size_kb",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "id",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": true,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "notes",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "rejection_reason",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "reviewed_at",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Date",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "reviewed_by",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": "pending_review",
+          "enums": [
+            "approved",
+            "expired",
+            "missing",
+            "pending_review",
+            "rejected"
+          ],
+          "field": "status",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Enum",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "updated_at",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Date",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "uploaded_at",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Date",
+          "validations": []
+        }
+      ],
+      "icon": null,
+      "integration": null,
+      "isReadOnly": false,
+      "isSearchable": true,
+      "isVirtual": false,
+      "name": "KycDocument",
       "onlyForRelationships": false,
       "paginationType": "page",
       "segments": []

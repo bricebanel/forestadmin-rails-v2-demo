@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  company: one
+  document_type: MyString
+  document_url: MyString
+  status: MyString
+  uploaded_at: 2025-10-27 12:24:41
+  reviewed_at: 2025-10-27 12:24:41
+  reviewed_by: MyString
+  expiry_date: 2025-10-27
+  rejection_reason: MyText
+  notes: MyText
+  file_size_kb: 1
+
+two:
+  company: two
+  document_type: MyString
+  document_url: MyString
+  status: MyString
+  uploaded_at: 2025-10-27 12:24:41
+  reviewed_at: 2025-10-27 12:24:41
+  reviewed_by: MyString
+  expiry_date: 2025-10-27
+  rejection_reason: MyText
+  notes: MyText
+  file_size_kb: 1
