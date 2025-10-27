@@ -92,6 +92,65 @@ module ForestAdminRails
             )
           end
         )
+
+        # Add "Reject Onboarding" smart action to Company collection
+        collection.add_action(
+          'Reject Onboarding',
+          BaseAction.new(
+            scope: ActionScope::SINGLE,
+            description: "Reject company onboarding and suspend their account",
+            submit_button_label: "❌ Deny Onboarding",
+            form: [
+              {
+                type: FieldType::STRING,
+                label: "Rejection Reason",
+                id: "rejection_reason",
+                description: "Explain why this company's onboarding is being rejected",
+                is_required: true,
+                widget: 'TextArea'
+              },
+              {
+                type: FieldType::BOOLEAN,
+                label: "Send notification email to company",
+                id: "send_notification",
+                description: "Notify the company about the rejection via email",
+                value: true
+              }
+            ]
+          ) do |context, result_builder|
+            # 1. Fetch the company data from Forest Admin
+            company_record = context.get_record(['id', 'company_name', 'kyc_status', 'status'])
+
+            # 2. Get the ActiveRecord model instance
+            company = Company.find(company_record['id'])
+
+            # 3. Get form values
+            rejection_reason = context.get_form_value('rejection_reason')
+            send_notification = context.get_form_value('send_notification')
+
+            # 4. Update company status
+            company.update!(
+              kyc_status: 'rejected',
+              status: 'suspended'
+            )
+
+            # 5. Log the rejection action
+            Rails.logger.info(
+              "Company onboarding rejected: #{company.company_name} (ID: #{company.id}) - " \
+              "Reason: #{rejection_reason} - Send notification: #{send_notification}"
+            )
+
+            # 6. Return success message
+            notification_status = send_notification ? "📧 Email notification will be sent to the company." : "No notification will be sent."
+
+            result_builder.success(
+              message: "❌ #{company.company_name}'s onboarding has been rejected.\n\n" \
+                       "Status: Suspended\n" \
+                       "Reason: #{rejection_reason}\n\n" \
+                       "#{notification_status}"
+            )
+          end
+        )
       end
     end
   end

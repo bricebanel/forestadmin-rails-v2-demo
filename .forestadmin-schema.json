@@ -280,6 +280,52 @@
               "changeHook"
             ]
           }
+        },
+        {
+          "id": "Company-1-reject-onboarding",
+          "name": "Reject Onboarding",
+          "submitButtonLabel": "❌ Deny Onboarding",
+          "description": "Reject company onboarding and suspend their account",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/Company/1/reject-onboarding",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Explain why this company's onboarding is being rejected",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "rejection_reason",
+              "label": "Rejection Reason",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            },
+            {
+              "description": "Notify the company about the rejection via email",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "send_notification",
+              "label": "Send notification email to company",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": true
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
         }
       ],
       "fields": [
