@@ -749,6 +749,22 @@
         {
           "defaultValue": null,
           "enums": [],
+          "field": "credit_utilization",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": false,
+          "isPrimaryKey": false,
+          "isReadOnly": true,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
           "field": "employee_count",
           "integration": null,
           "inverseOf": null,
@@ -779,6 +795,22 @@
           "type": [
             "Number"
           ],
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "health_score",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": false,
+          "isPrimaryKey": false,
+          "isReadOnly": true,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
           "validations": []
         },
         {
@@ -898,6 +930,22 @@
           "isFilterable": true,
           "isPrimaryKey": false,
           "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "missing_kyc_documents",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": false,
+          "isPrimaryKey": false,
+          "isReadOnly": true,
           "isRequired": false,
           "isSortable": true,
           "isVirtual": false,
@@ -1788,7 +1836,77 @@
       "segments": []
     },
     {
-      "actions": [],
+      "actions": [
+        {
+          "id": "KycDocument-0-update-document-status",
+          "name": "Update Document Status",
+          "submitButtonLabel": "📝 Update Status",
+          "description": "Update the status of a KYC document",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/KycDocument/0/update-document-status",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Select the new status for this document",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "new_status",
+              "label": "New Status",
+              "widgetEdit": null,
+              "type": "Enum",
+              "enums": [
+                "pending_review",
+                "approved",
+                "rejected",
+                "missing",
+                "expired"
+              ],
+              "defaultValue": null
+            },
+            {
+              "description": "Add any notes about this document review",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "notes",
+              "label": "Notes",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            },
+            {
+              "description": "Required if status is Rejected - explain why the document was rejected",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "rejection_reason",
+              "label": "Rejection Reason",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
+        }
+      ],
       "fields": [
         {
           "defaultValue": null,

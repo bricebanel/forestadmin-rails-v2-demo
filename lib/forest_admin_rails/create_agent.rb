@@ -2,6 +2,7 @@ module ForestAdminRails
   class CreateAgent
     include ForestAdminDatasourceCustomizer::Decorators::Action::Types
     include ForestAdminDatasourceCustomizer::Decorators::Action
+    include ForestAdminDatasourceCustomizer::Decorators::Computed
 
     def self.setup!
       database_configuration = Rails.configuration.database_configuration
@@ -515,6 +516,279 @@ module ForestAdminRails
             # Return success with HTML modal
             result_builder.success(
               message: "Documents requested successfully",
+              options: { html: html_content }
+            )
+          end
+        )
+
+        # Add "Credit Utilization" smart field
+        collection.add_field(
+          'credit_utilization',
+          ComputedDefinition.new(
+            column_type: 'String',
+            dependencies: ['id', 'credit_limit_eur'],
+            values: proc { |records|
+              records.map do |record|
+                company = Company.find(record['id'])
+                credit_limit = record['credit_limit_eur']
+
+                if credit_limit.nil?
+                  'No credit limit set'
+                else
+                  factoring_in_progress = company.total_factoring_in_progress
+                  percentage = credit_limit > 0 ? ((factoring_in_progress / credit_limit) * 100).round(1) : 0
+
+                  # Format amounts with thousands separator (space for French format)
+                  formatted_factoring = factoring_in_progress.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+                  formatted_limit = credit_limit.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+
+                  "€#{formatted_factoring} / €#{formatted_limit} (#{percentage}%)"
+                end
+              end
+            }
+          )
+        )
+
+        # Add "Missing KYC Documents" smart field
+        collection.add_field(
+          'missing_kyc_documents',
+          ComputedDefinition.new(
+            column_type: 'String',
+            dependencies: ['id'],
+            values: proc { |records|
+              # Document type labels mapping
+              doc_labels_map = {
+                'kbis' => 'K-bis',
+                'attestation_vigilance' => 'Attestation Vigilance',
+                'rcc' => 'RCC',
+                'attestation_assurance' => 'Attestation Assurance',
+                'rib' => 'RIB',
+                'carte_identite' => 'Carte Identité',
+                'statuts' => 'Statuts',
+                'liasse_fiscale' => 'Liasse Fiscale',
+                'bilan' => 'Bilan',
+                'decennale' => 'Décennale',
+                'qualibat' => 'Qualibat',
+                'autre' => 'Autre'
+              }
+
+              records.map do |record|
+                company = Company.find(record['id'])
+
+                # Check if company has any documents
+                if company.kyc_documents.empty?
+                  'No documents submitted'
+                else
+                  # Get documents that are missing or rejected
+                  problematic_docs = company.kyc_documents.where(status: ['missing', 'rejected'])
+
+                  if problematic_docs.empty?
+                    '✓ All documents complete'
+                  else
+                    # Convert document types to readable labels
+                    doc_names = problematic_docs.map do |doc|
+                      doc_labels_map[doc.document_type] || doc.document_type.capitalize
+                    end.uniq.sort
+
+                    doc_names.join(', ')
+                  end
+                end
+              end
+            }
+          )
+        )
+
+        # Add "Health Score" smart field
+        collection.add_field(
+          'health_score',
+          ComputedDefinition.new(
+            column_type: 'String',
+            dependencies: ['id', 'kyc_status', 'status', 'credit_limit_eur'],
+            values: proc { |records|
+              records.map do |record|
+                company = Company.find(record['id'])
+                kyc_status = record['kyc_status']
+                status = record['status']
+                credit_limit = record['credit_limit_eur']
+
+                # Calculate credit utilization percentage if applicable
+                credit_utilization = if credit_limit && credit_limit > 0
+                                       factoring_in_progress = company.total_factoring_in_progress
+                                       ((factoring_in_progress / credit_limit) * 100).round(1)
+                                     else
+                                       0
+                                     end
+
+                # Determine health score based on multiple factors
+                if status == 'suspended' || status == 'closed' || kyc_status == 'rejected'
+                  '🔴 Poor'
+                elsif kyc_status == 'escalated' || kyc_status == 'waiting_on_customer' ||
+                      credit_utilization > 80 ||
+                      (credit_limit.nil? && kyc_status != 'validated')
+                  '🟠 Fair'
+                elsif kyc_status == 'validated' && status == 'active' && credit_utilization < 50
+                  '🟢 Excellent'
+                else
+                  '🟡 Good'
+                end
+              end
+            }
+          )
+        )
+      end
+
+      # Add "Update Document Status" smart action to KycDocument collection
+      @create_agent.customize_collection('KycDocument') do |collection|
+        collection.add_action(
+          'Update Document Status',
+          BaseAction.new(
+            scope: ActionScope::SINGLE,
+            description: "Update the status of a KYC document",
+            submit_button_label: "📝 Update Status",
+            form: [
+              {
+                type: FieldType::ENUM,
+                label: "New Status",
+                id: "new_status",
+                description: "Select the new status for this document",
+                is_required: true,
+                enum_values: ['pending_review', 'approved', 'rejected', 'missing', 'expired']
+              },
+              {
+                type: FieldType::STRING,
+                label: "Notes",
+                id: "notes",
+                description: "Add any notes about this document review",
+                is_required: false,
+                widget: 'TextArea'
+              },
+              {
+                type: FieldType::STRING,
+                label: "Rejection Reason",
+                id: "rejection_reason",
+                description: "Required if status is Rejected - explain why the document was rejected",
+                is_required: false,
+                widget: 'TextArea'
+              }
+            ]
+          ) do |context, result_builder|
+            # 1. Fetch the KYC document data from Forest Admin
+            document_record = context.get_record(['id', 'document_type', 'company_id', 'status'])
+
+            # 2. Get the ActiveRecord model instance
+            document = KycDocument.find(document_record['id'])
+
+            # 3. Get form values
+            new_status = context.get_form_value('new_status')
+            notes = context.get_form_value('notes')
+            rejection_reason = context.get_form_value('rejection_reason')
+
+            # 4. Validation: rejection reason required if status is rejected
+            if new_status == 'rejected' && rejection_reason.blank?
+              next result_builder.error(message: "Rejection reason is required when rejecting a document")
+            end
+
+            # 5. Update document
+            document.update!(
+              status: new_status,
+              notes: notes.presence,
+              rejection_reason: (new_status == 'rejected' ? rejection_reason : nil),
+              reviewed_at: Time.current,
+              reviewed_by: 'Admin'
+            )
+
+            # 6. Log the action
+            Rails.logger.info(
+              "KYC Document status updated: Document ID #{document.id} (#{document.document_type}) - " \
+              "Company: #{document.company.company_name} - New Status: #{new_status}"
+            )
+
+            # 7. Build HTML success modal
+            company = document.company
+
+            # Document type labels mapping
+            doc_labels_map = {
+              'kbis' => 'K-bis',
+              'attestation_vigilance' => 'Attestation Vigilance',
+              'rcc' => 'RCC',
+              'attestation_assurance' => 'Attestation Assurance',
+              'rib' => 'RIB',
+              'carte_identite' => 'Carte Identité',
+              'statuts' => 'Statuts',
+              'liasse_fiscale' => 'Liasse Fiscale',
+              'bilan' => 'Bilan',
+              'decennale' => 'Décennale',
+              'qualibat' => 'Qualibat',
+              'autre' => 'Autre'
+            }
+            doc_label = doc_labels_map[document.document_type] || document.document_type.capitalize
+
+            # Status colors
+            status_colors = {
+              'approved' => '#4caf50',
+              'rejected' => '#f44336',
+              'pending_review' => '#ff9800',
+              'missing' => '#9e9e9e',
+              'expired' => '#757575'
+            }
+            status_color = status_colors[new_status] || '#2196f3'
+
+            # Status emojis
+            status_emojis = {
+              'approved' => '✅',
+              'rejected' => '❌',
+              'pending_review' => '⏳',
+              'missing' => '📋',
+              'expired' => '⌛'
+            }
+            status_emoji = status_emojis[new_status] || '📄'
+
+            # Build notes section if provided
+            notes_html = if notes.present?
+              "<div style='background-color: #e3f2fd; border-left: 3px solid #2196f3; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0 0 5px 0; font-weight: 600; color: #1976d2; font-size: 13px;'>NOTES</p>
+                <p style='margin: 0; color: #555; font-size: 14px; line-height: 1.5;'>#{notes}</p>
+              </div>"
+            else
+              ''
+            end
+
+            # Build rejection reason section if provided
+            rejection_html = if rejection_reason.present?
+              "<div style='background-color: #ffebee; border-left: 3px solid #f44336; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0 0 5px 0; font-weight: 600; color: #d32f2f; font-size: 13px;'>REJECTION REASON</p>
+                <p style='margin: 0; color: #555; font-size: 14px; line-height: 1.5;'>#{rejection_reason}</p>
+              </div>"
+            else
+              ''
+            end
+
+            html_content = "
+            <div style='padding: 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;'>
+              <h3 style='margin-top: 0; margin-bottom: 15px; color: #{status_color}; font-size: 20px;'>
+                #{status_emoji} Document Status Updated
+              </h3>
+
+              <div style='background-color: #f5f5f5; border-radius: 4px; padding: 15px; margin-bottom: 15px;'>
+                <p style='margin: 0 0 8px 0; font-size: 12px; color: #757575; text-transform: uppercase; font-weight: 600;'>Document Details</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Type:</strong> #{doc_label}</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Company:</strong> #{company.company_name}</p>
+                <p style='margin: 0; color: #555; font-size: 14px;'><strong>New Status:</strong> <span style='color: #{status_color}; font-weight: 600;'>#{new_status.humanize}</span></p>
+              </div>
+
+              #{notes_html}
+              #{rejection_html}
+
+              <div style='margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;'>
+                <p style='margin: 0; color: #757575; font-size: 12px;'>
+                  Reviewed by Admin on #{Time.current.strftime('%B %d, %Y at %H:%M')}
+                </p>
+              </div>
+            </div>
+            "
+
+            result_builder.success(
+              message: "Document status updated successfully",
               options: { html: html_content }
             )
           end
