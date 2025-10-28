@@ -1214,6 +1214,126 @@
               "changeHook"
             ]
           }
+        },
+        {
+          "id": "FactoringOperation-2-fund-operation",
+          "name": "Fund Operation",
+          "submitButtonLabel": "💰 Fund Now",
+          "description": "Release the advance payment to the company's account",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/FactoringOperation/2/fund-operation",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "This action will create financial transactions and cannot be easily reversed",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "confirm_funding",
+              "label": "⚠️ I confirm the advance payment will be transferred",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": false
+            },
+            {
+              "description": "Bank transfer reference or transaction ID",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "payment_reference",
+              "label": "Payment Reference (optional)",
+              "widgetEdit": null,
+              "type": "String",
+              "defaultValue": null
+            },
+            {
+              "description": "Any additional notes about this funding",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "funding_notes",
+              "label": "Notes (optional)",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
+        },
+        {
+          "id": "FactoringOperation-1-reject-factoring-request",
+          "name": "Reject factoring request",
+          "submitButtonLabel": "❌ Reject Request",
+          "description": "Reject a factoring request with a reason",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/FactoringOperation/1/reject-factoring-request",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Select the primary reason for rejection",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "rejection_reason",
+              "label": "Rejection Reason",
+              "widgetEdit": null,
+              "type": "Enum",
+              "enums": [
+                "insufficient_credit",
+                "high_risk",
+                "missing_documents",
+                "fraudulent_invoice",
+                "invoice_not_verified",
+                "other"
+              ],
+              "defaultValue": null
+            },
+            {
+              "description": "Provide detailed explanation for the rejection",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "detailed_notes",
+              "label": "Detailed Notes",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            },
+            {
+              "description": "Send rejection notification email to the company",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "notify_company",
+              "label": "Notify Company",
+              "widgetEdit": null,
+              "type": "Boolean",
+              "defaultValue": true
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
         }
       ],
       "fields": [
@@ -1559,7 +1679,91 @@
       "segments": []
     },
     {
-      "actions": [],
+      "actions": [
+        {
+          "id": "Invoice-0-mark-invoice-as-paid",
+          "name": "Mark Invoice as Paid",
+          "submitButtonLabel": "✅ Mark as Paid",
+          "description": "Record that the end customer has paid this invoice",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/Invoice/0/mark-invoice-as-paid",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Date when the payment was received",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "payment_date",
+              "label": "Payment Date",
+              "widgetEdit": null,
+              "type": "Date",
+              "defaultValue": null
+            },
+            {
+              "description": "Amount received from the customer",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "payment_amount",
+              "label": "Payment Amount Received (€)",
+              "widgetEdit": null,
+              "type": "Number",
+              "defaultValue": null
+            },
+            {
+              "description": "How the customer paid",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "payment_method",
+              "label": "Payment Method",
+              "widgetEdit": null,
+              "type": "Enum",
+              "enums": [
+                "bank_transfer",
+                "check",
+                "cash",
+                "wire_transfer",
+                "other"
+              ],
+              "defaultValue": null
+            },
+            {
+              "description": "Transaction or check reference number",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "payment_reference",
+              "label": "Payment Reference (optional)",
+              "widgetEdit": null,
+              "type": "String",
+              "defaultValue": null
+            },
+            {
+              "description": "Any additional details about the payment",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "payment_notes",
+              "label": "Notes (optional)",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
+        }
+      ],
       "fields": [
         {
           "defaultValue": null,

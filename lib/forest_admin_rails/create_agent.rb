@@ -1011,6 +1011,649 @@ module ForestAdminRails
             )
           end
         )
+
+        # Add "Reject factoring request" smart action to FactoringOperation collection
+        collection.add_action(
+          'Reject factoring request',
+          BaseAction.new(
+            scope: ActionScope::SINGLE,
+            description: "Reject a factoring request with a reason",
+            submit_button_label: "❌ Reject Request",
+            form: [
+              {
+                type: FieldType::ENUM,
+                label: "Rejection Reason",
+                id: "rejection_reason",
+                description: "Select the primary reason for rejection",
+                is_required: true,
+                enum_values: [
+                  'insufficient_credit',
+                  'high_risk',
+                  'missing_documents',
+                  'fraudulent_invoice',
+                  'invoice_not_verified',
+                  'other'
+                ]
+              },
+              {
+                type: FieldType::STRING,
+                label: "Detailed Notes",
+                id: "detailed_notes",
+                description: "Provide detailed explanation for the rejection",
+                is_required: true,
+                widget: 'TextArea'
+              },
+              {
+                type: FieldType::BOOLEAN,
+                label: "Notify Company",
+                id: "notify_company",
+                description: "Send rejection notification email to the company",
+                value: true
+              }
+            ]
+          ) do |context, result_builder|
+            # 1. Fetch the factoring operation data
+            operation_record = context.get_record(['id', 'status', 'company_id', 'invoice_id'])
+
+            # 2. Get the ActiveRecord model instance
+            operation = FactoringOperation.find(operation_record['id'])
+            company = operation.company
+            invoice = operation.invoice
+
+            # 3. Validate: Only pending or under_review status can be rejected
+            unless ['pending', 'under_review'].include?(operation.status)
+              next result_builder.error(
+                message: "❌ Cannot reject: This factoring operation has status '#{operation.status}'. " \
+                         "Only 'pending' or 'under_review' operations can be rejected."
+              )
+            end
+
+            # 4. Get form values
+            rejection_reason = context.get_form_value('rejection_reason')
+            detailed_notes = context.get_form_value('detailed_notes')
+            notify_company = context.get_form_value('notify_company')
+
+            # 5. Reject the operation using model method
+            operation.reject!(detailed_notes)
+
+            # 6. Store the rejection reason category (could add a field to model, for now just in notes)
+            operation.update!(rejection_reason: "#{rejection_reason}: #{detailed_notes}")
+
+            # 7. Log the rejection
+            Rails.logger.info(
+              "Factoring operation rejected: Operation ID #{operation.id} - " \
+              "Company: #{company.company_name} - Invoice: #{invoice.invoice_number} - " \
+              "Reason: #{rejection_reason} - Notes: #{detailed_notes} - Notify: #{notify_company}"
+            )
+
+            # 8. Build HTML success modal
+            # Rejection reason labels
+            reason_labels = {
+              'insufficient_credit' => '💳 Insufficient Credit',
+              'high_risk' => '⚠️ High Risk Assessment',
+              'missing_documents' => '📋 Missing Documents',
+              'fraudulent_invoice' => '🚨 Fraudulent Invoice',
+              'invoice_not_verified' => '❓ Invoice Not Verified',
+              'other' => '📝 Other Reason'
+            }
+            reason_label = reason_labels[rejection_reason] || rejection_reason
+
+            # Format invoice amount
+            formatted_invoice_amount = invoice.amount_ttc.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+
+            # Notification section
+            notification_html = if notify_company
+              "<div style='background-color: #e3f2fd; border-left: 3px solid #2196f3; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0; color: #1976d2; font-size: 14px;'>📧 Notification email will be sent to <strong>#{company.contact_email}</strong></p>
+              </div>"
+            else
+              "<div style='background-color: #f5f5f5; border-left: 3px solid #9e9e9e; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0; color: #616161; font-size: 14px;'>No notification will be sent to the company.</p>
+              </div>"
+            end
+
+            html_content = "
+            <div style='padding: 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;'>
+              <h3 style='margin-top: 0; margin-bottom: 15px; color: #d32f2f; font-size: 20px;'>
+                ❌ Factoring Request Rejected
+              </h3>
+
+              <p style='margin: 0 0 20px 0; color: #555; font-size: 14px;'>
+                The factoring request from <strong>#{company.company_name}</strong> has been rejected.
+              </p>
+
+              <div style='background-color: #f5f5f5; border-radius: 6px; padding: 15px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 10px 0; font-size: 12px; color: #757575; text-transform: uppercase; font-weight: 600;'>Request Details</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Company:</strong> #{company.company_name}</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Invoice:</strong> #{invoice.invoice_number}</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Invoice Amount:</strong> €#{formatted_invoice_amount}</p>
+                <p style='margin: 0; color: #555; font-size: 14px;'><strong>Invoice Date:</strong> #{invoice.invoice_date.strftime('%B %d, %Y')}</p>
+              </div>
+
+              <div style='background-color: #ffebee; border-left: 4px solid #f44336; padding: 15px; border-radius: 4px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 10px 0; font-weight: 600; color: #c62828; font-size: 13px; text-transform: uppercase;'>Rejection Reason</p>
+                <p style='margin: 0 0 10px 0; color: #d32f2f; font-size: 16px; font-weight: 600;'>#{reason_label}</p>
+                <p style='margin: 0; color: #555; font-size: 14px; line-height: 1.5;'>#{detailed_notes}</p>
+              </div>
+
+              #{notification_html}
+
+              <div style='background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 4px; margin-top: 20px;'>
+                <p style='margin: 0; color: #e65100; font-size: 14px;'>
+                  💡 <strong>Next Steps:</strong> The company may resubmit with corrections, or you can archive this request.
+                </p>
+              </div>
+
+              <div style='margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;'>
+                <p style='margin: 0; color: #757575; font-size: 12px;'>
+                  <strong>Status:</strong> Rejected on #{Time.current.strftime('%B %d, %Y at %H:%M')}
+                </p>
+              </div>
+            </div>
+            "
+
+            result_builder.success(
+              message: "Factoring request rejected successfully",
+              options: { html: html_content }
+            )
+          end
+        )
+
+        # Add "Fund Operation" smart action to FactoringOperation collection
+        collection.add_action(
+          'Fund Operation',
+          BaseAction.new(
+            scope: ActionScope::SINGLE,
+            description: "Release the advance payment to the company's account",
+            submit_button_label: "💰 Fund Now",
+            form: [
+              {
+                type: FieldType::BOOLEAN,
+                label: "⚠️ I confirm the advance payment will be transferred",
+                id: "confirm_funding",
+                description: "This action will create financial transactions and cannot be easily reversed",
+                is_required: true,
+                value: false
+              },
+              {
+                type: FieldType::STRING,
+                label: "Payment Reference (optional)",
+                id: "payment_reference",
+                description: "Bank transfer reference or transaction ID",
+                is_required: false
+              },
+              {
+                type: FieldType::STRING,
+                label: "Notes (optional)",
+                id: "funding_notes",
+                description: "Any additional notes about this funding",
+                is_required: false,
+                widget: 'TextArea'
+              }
+            ]
+          ) do |context, result_builder|
+            # 1. Fetch the factoring operation data
+            operation_record = context.get_record([
+              'id', 'status', 'company_id', 'invoice_id',
+              'advance_amount', 'fee_amount', 'net_amount', 'invoice_amount'
+            ])
+
+            # 2. Get the ActiveRecord model instances
+            operation = FactoringOperation.find(operation_record['id'])
+            company = operation.company
+            invoice = operation.invoice
+
+            # 3. Validate: Only approved status can be funded
+            unless operation.status == 'approved'
+              next result_builder.error(
+                message: "❌ Cannot fund: This factoring operation has status '#{operation.status}'. " \
+                         "Only 'approved' operations can be funded. Please approve the operation first."
+              )
+            end
+
+            # 4. Get form values
+            confirm_funding = context.get_form_value('confirm_funding')
+            payment_reference = context.get_form_value('payment_reference')
+            funding_notes = context.get_form_value('funding_notes')
+
+            # 5. Validate: Confirmation must be checked
+            unless confirm_funding
+              next result_builder.error(
+                message: "❌ Please confirm the funding by checking the confirmation box."
+              )
+            end
+
+            # 6. Get current company account balance
+            current_balance = company.account_balance
+
+            # 7. Create account transactions (atomic operation with ActiveRecord transaction)
+            advance_transaction = nil
+            fee_transaction = nil
+
+            begin
+              ActiveRecord::Base.transaction do
+                # First transaction: Credit company with advance amount
+                advance_transaction = AccountTransaction.create_factoring_advance!(
+                  company: company,
+                  factoring_operation: operation,
+                  amount: operation.advance_amount,
+                  balance_before: current_balance
+                )
+
+                # Second transaction: Debit company with fee amount
+                # Balance after advance is now current_balance + advance_amount
+                fee_transaction = AccountTransaction.create_factoring_fee!(
+                  company: company,
+                  factoring_operation: operation,
+                  amount: operation.fee_amount,
+                  balance_before: current_balance + operation.advance_amount
+                )
+
+                # Update operation status to funded
+                operation.fund!
+
+                # Store payment reference if provided
+                if payment_reference.present?
+                  operation.update!(rejection_reason: nil) # Clear any old data
+                  # Note: Could add a payment_reference field to the model in the future
+                end
+              end
+            rescue => e
+              Rails.logger.error("Failed to fund operation #{operation.id}: #{e.message}")
+              next result_builder.error(
+                message: "❌ Funding failed: #{e.message}. No transactions were created."
+              )
+            end
+
+            # 8. Calculate new balance (should match fee_transaction.balance_after)
+            new_balance = current_balance + operation.net_amount
+
+            # 9. Log the funding with transaction details
+            Rails.logger.info(
+              "Factoring operation funded: Operation ID #{operation.id} - " \
+              "Company: #{company.company_name} - Invoice: #{invoice.invoice_number} - " \
+              "Net Amount: €#{operation.net_amount} - " \
+              "Transactions: Advance #{advance_transaction.id}, Fee #{fee_transaction.id} - " \
+              "Payment Ref: #{payment_reference} - Notes: #{funding_notes}"
+            )
+
+            # 10. Build HTML success modal
+            # Format amounts
+            formatted_invoice = operation.invoice_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_advance = operation.advance_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_fee = operation.fee_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_net = operation.net_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_old_balance = current_balance.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_new_balance = new_balance.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+
+            # Payment reference section
+            payment_ref_html = if payment_reference.present?
+              "<div style='background-color: #e3f2fd; border-left: 3px solid #2196f3; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0 0 5px 0; font-weight: 600; color: #1565c0; font-size: 13px;'>PAYMENT REFERENCE</p>
+                <p style='margin: 0; color: #333; font-size: 14px;'>#{payment_reference}</p>
+              </div>"
+            else
+              ""
+            end
+
+            # Notes section
+            notes_html = if funding_notes.present?
+              "<div style='background-color: #f5f5f5; border-left: 3px solid #757575; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0 0 5px 0; font-weight: 600; color: #616161; font-size: 13px;'>NOTES</p>
+                <p style='margin: 0; color: #333; font-size: 14px; line-height: 1.5;'>#{funding_notes}</p>
+              </div>"
+            else
+              ""
+            end
+
+            html_content = "
+            <div style='padding: 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;'>
+              <h3 style='margin-top: 0; margin-bottom: 15px; color: #4caf50; font-size: 20px;'>
+                💰 Factoring Operation Funded Successfully
+              </h3>
+
+              <p style='margin: 0 0 20px 0; color: #555; font-size: 14px;'>
+                The advance payment has been transferred to <strong>#{company.company_name}</strong>'s account.
+              </p>
+
+              <div style='background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 4px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 12px 0; font-size: 13px; color: #2e7d32; font-weight: 600; text-transform: uppercase;'>Transaction Summary</p>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
+                  <span style='color: #555; font-size: 14px;'>Invoice Amount:</span>
+                  <span style='color: #2c3e50; font-size: 14px; font-weight: 600;'>€#{formatted_invoice}</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
+                  <span style='color: #555; font-size: 14px;'>Advance (#{operation.advance_rate}%):</span>
+                  <span style='color: #4caf50; font-size: 14px; font-weight: 600;'>+€#{formatted_advance}</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 12px;'>
+                  <span style='color: #555; font-size: 14px;'>Factoring Fee (#{operation.fee_rate}%):</span>
+                  <span style='color: #d32f2f; font-size: 14px; font-weight: 600;'>-€#{formatted_fee}</span>
+                </div>
+                <div style='border-top: 2px solid #4caf50; padding-top: 12px; display: flex; justify-content: space-between;'>
+                  <span style='color: #2e7d32; font-size: 16px; font-weight: 600;'>Net Transfer:</span>
+                  <span style='color: #2e7d32; font-size: 18px; font-weight: 700;'>€#{formatted_net}</span>
+                </div>
+              </div>
+
+              <div style='background-color: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 12px 0; font-size: 12px; color: #757575; text-transform: uppercase; font-weight: 600;'>Company Account Balance</p>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+                  <span style='color: #555; font-size: 14px;'>Previous Balance:</span>
+                  <span style='color: #757575; font-size: 16px;'>€#{formatted_old_balance}</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                  <span style='color: #2e7d32; font-size: 14px; font-weight: 600;'>New Balance:</span>
+                  <span style='color: #2e7d32; font-size: 20px; font-weight: 700;'>€#{formatted_new_balance}</span>
+                </div>
+              </div>
+
+              <div style='background-color: #f5f5f5; border-radius: 6px; padding: 15px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 10px 0; font-size: 12px; color: #757575; text-transform: uppercase; font-weight: 600;'>Transaction IDs</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Advance Transaction:</strong> ##{advance_transaction.id}</p>
+                <p style='margin: 0; color: #555; font-size: 14px;'><strong>Fee Transaction:</strong> ##{fee_transaction.id}</p>
+              </div>
+
+              #{payment_ref_html}
+              #{notes_html}
+
+              <div style='background-color: #fff8e1; border-left: 4px solid #ffa726; padding: 15px; border-radius: 4px; margin-top: 20px;'>
+                <p style='margin: 0; color: #e65100; font-size: 14px;'>
+                  ⏳ <strong>Next Step:</strong> Wait for the end customer to pay Invoice ##{invoice.invoice_number}.
+                  Once payment is received, use the \"Mark Invoice as Paid\" action to complete this factoring operation.
+                </p>
+              </div>
+
+              <div style='margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;'>
+                <p style='margin: 0; color: #757575; font-size: 12px;'>
+                  <strong>Funded on:</strong> #{operation.funded_at.strftime('%B %d, %Y at %H:%M')} |
+                  <strong>Invoice Due:</strong> #{invoice.due_date.strftime('%B %d, %Y')}
+                </p>
+              </div>
+            </div>
+            "
+
+            result_builder.success(
+              message: "Operation funded successfully - €#{formatted_net} transferred",
+              options: { html: html_content }
+            )
+          end
+        )
+      end
+
+      # Add "Mark Invoice as Paid" smart action to Invoice collection
+      @create_agent.customize_collection('Invoice') do |collection|
+        collection.add_action(
+          'Mark Invoice as Paid',
+          BaseAction.new(
+            scope: ActionScope::SINGLE,
+            description: "Record that the end customer has paid this invoice",
+            submit_button_label: "✅ Mark as Paid",
+            form: [
+              {
+                type: FieldType::DATE,
+                label: "Payment Date",
+                id: "payment_date",
+                description: "Date when the payment was received",
+                is_required: true
+              },
+              {
+                type: FieldType::NUMBER,
+                label: "Payment Amount Received (€)",
+                id: "payment_amount",
+                description: "Amount received from the customer",
+                is_required: true
+              },
+              {
+                type: FieldType::ENUM,
+                label: "Payment Method",
+                id: "payment_method",
+                description: "How the customer paid",
+                is_required: true,
+                enum_values: ['bank_transfer', 'check', 'cash', 'wire_transfer', 'other']
+              },
+              {
+                type: FieldType::STRING,
+                label: "Payment Reference (optional)",
+                id: "payment_reference",
+                description: "Transaction or check reference number",
+                is_required: false
+              },
+              {
+                type: FieldType::STRING,
+                label: "Notes (optional)",
+                id: "payment_notes",
+                description: "Any additional details about the payment",
+                is_required: false,
+                widget: 'TextArea'
+              }
+            ]
+          ) do |context, result_builder|
+            # 1. Fetch the invoice data
+            invoice_record = context.get_record([
+              'id', 'payment_status', 'invoice_number', 'amount_ttc',
+              'company_id', 'due_date', 'invoice_date'
+            ])
+
+            # 2. Get the ActiveRecord model instances
+            invoice = Invoice.find(invoice_record['id'])
+            company = invoice.company
+            factoring_operation = invoice.factoring_operation
+
+            # 3. Validate: Invoice must be pending or overdue
+            unless ['pending', 'overdue'].include?(invoice.payment_status)
+              next result_builder.error(
+                message: "❌ Cannot mark as paid: This invoice has payment status '#{invoice.payment_status}'. " \
+                         "Only 'pending' or 'overdue' invoices can be marked as paid."
+              )
+            end
+
+            # 4. Get form values
+            payment_date = context.get_form_value('payment_date')
+            payment_amount = context.get_form_value('payment_amount')
+            payment_method = context.get_form_value('payment_method')
+            payment_reference = context.get_form_value('payment_reference')
+            payment_notes = context.get_form_value('payment_notes')
+
+            # 5. Validate payment amount
+            if payment_amount <= 0
+              next result_builder.error(message: "❌ Payment amount must be greater than 0")
+            end
+
+            # 6. Check if payment is partial
+            is_partial_payment = (payment_amount - invoice.amount_ttc).abs > 0.01
+            payment_difference = payment_amount - invoice.amount_ttc
+
+            # 7. Parse payment date (Forest Admin sends date as string)
+            payment_date_parsed = if payment_date.is_a?(String)
+              Date.parse(payment_date)
+            else
+              payment_date
+            end
+
+            # 8. Update invoice
+            if is_partial_payment && payment_difference < 0
+              # Partial payment (less than full amount)
+              invoice.update!(
+                payment_status: 'partially_paid',
+                paid_at: payment_date_parsed
+              )
+            else
+              # Full payment (or overpayment)
+              invoice.update!(
+                payment_status: 'paid',
+                paid_at: payment_date_parsed
+              )
+            end
+
+            # 9. Calculate payment delay (days late or early)
+            payment_delay = (payment_date_parsed - invoice.due_date).to_i
+            invoice.update!(payment_delay_days: payment_delay)
+
+            # 10. If invoice has a factoring operation and it's funded, complete it
+            factoring_completed = false
+            if factoring_operation && factoring_operation.status == 'funded'
+              factoring_operation.complete_final_payment!
+              factoring_completed = true
+            end
+
+            # 11. Log the payment
+            Rails.logger.info(
+              "Invoice marked as paid: Invoice ##{invoice.invoice_number} - " \
+              "Company: #{company.company_name} - " \
+              "Amount: €#{payment_amount} - Method: #{payment_method} - " \
+              "Payment Delay: #{payment_delay} days - " \
+              "Factoring Completed: #{factoring_completed} - " \
+              "Reference: #{payment_reference} - Notes: #{payment_notes}"
+            )
+
+            # 12. Build HTML success modal
+            # Format amounts
+            formatted_invoice_amount = invoice.amount_ttc.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_payment_amount = payment_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+
+            # Payment method labels
+            payment_method_labels = {
+              'bank_transfer' => '🏦 Bank Transfer',
+              'check' => '📝 Check',
+              'cash' => '💵 Cash',
+              'wire_transfer' => '💸 Wire Transfer',
+              'other' => '📋 Other'
+            }
+            payment_method_label = payment_method_labels[payment_method] || payment_method
+
+            # Payment delay indicator
+            delay_html = if payment_delay < 0
+              days_early = payment_delay.abs
+              "<div style='background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px; border-radius: 4px;'>
+                <p style='margin: 0; color: #2e7d32; font-size: 14px;'>
+                  ✅ <strong>Paid Early:</strong> #{days_early} day#{days_early > 1 ? 's' : ''} before due date
+                </p>
+              </div>"
+            elsif payment_delay == 0
+              "<div style='background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px; border-radius: 4px;'>
+                <p style='margin: 0; color: #2e7d32; font-size: 14px;'>
+                  ✅ <strong>Paid On Time:</strong> Received on due date
+                </p>
+              </div>"
+            else
+              "<div style='background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 12px; border-radius: 4px;'>
+                <p style='margin: 0; color: #e65100; font-size: 14px;'>
+                  ⚠️ <strong>Paid Late:</strong> #{payment_delay} day#{payment_delay > 1 ? 's' : ''} after due date
+                </p>
+              </div>"
+            end
+
+            # Partial payment warning
+            partial_payment_html = if is_partial_payment && payment_difference < 0
+              remaining = (invoice.amount_ttc - payment_amount).abs
+              formatted_remaining = remaining.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+              "<div style='background-color: #fff8e1; border-left: 4px solid #ffa726; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0; color: #e65100; font-size: 14px;'>
+                  ⚠️ <strong>Partial Payment:</strong> €#{formatted_remaining} still outstanding
+                </p>
+              </div>"
+            elsif is_partial_payment && payment_difference > 0
+              overpayment = payment_difference.abs
+              formatted_overpayment = overpayment.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+              "<div style='background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0; color: #1976d2; font-size: 14px;'>
+                  ℹ️ <strong>Overpayment:</strong> €#{formatted_overpayment} more than invoice amount
+                </p>
+              </div>"
+            else
+              ""
+            end
+
+            # Factoring completion section
+            factoring_html = if factoring_completed
+              formatted_advance = factoring_operation.advance_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+              formatted_fee = factoring_operation.fee_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+              days_funded = (Date.today - factoring_operation.funded_at.to_date).to_i
+
+              "<div style='background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 4px; margin-top: 20px;'>
+                <p style='margin: 0 0 10px 0; font-weight: 600; color: #2e7d32; font-size: 15px;'>
+                  💰 Factoring Operation Completed
+                </p>
+                <p style='margin: 0 0 8px 0; color: #555; font-size: 14px;'>
+                  The factoring operation has been automatically marked as completed.
+                </p>
+                <div style='background-color: rgba(255,255,255,0.7); padding: 10px; border-radius: 4px; margin-top: 10px;'>
+                  <p style='margin: 0 0 5px 0; color: #555; font-size: 13px;'><strong>Advance Paid:</strong> €#{formatted_advance}</p>
+                  <p style='margin: 0 0 5px 0; color: #555; font-size: 13px;'><strong>Fee Earned:</strong> €#{formatted_fee}</p>
+                  <p style='margin: 0; color: #555; font-size: 13px;'><strong>Duration:</strong> #{days_funded} day#{days_funded > 1 ? 's' : ''} funded</p>
+                </div>
+              </div>"
+            elsif factoring_operation
+              "<div style='background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0; color: #e65100; font-size: 14px;'>
+                  ℹ️ This invoice has a factoring operation with status: <strong>#{factoring_operation.status}</strong>
+                </p>
+              </div>"
+            else
+              ""
+            end
+
+            # Payment reference section
+            payment_ref_html = if payment_reference.present?
+              "<div style='background-color: #f5f5f5; border-left: 3px solid #757575; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0 0 5px 0; font-weight: 600; color: #616161; font-size: 13px;'>PAYMENT REFERENCE</p>
+                <p style='margin: 0; color: #333; font-size: 14px;'>#{payment_reference}</p>
+              </div>"
+            else
+              ""
+            end
+
+            # Notes section
+            notes_html = if payment_notes.present?
+              "<div style='background-color: #f5f5f5; border-left: 3px solid #757575; padding: 12px; border-radius: 4px; margin-top: 15px;'>
+                <p style='margin: 0 0 5px 0; font-weight: 600; color: #616161; font-size: 13px;'>NOTES</p>
+                <p style='margin: 0; color: #333; font-size: 14px; line-height: 1.5;'>#{payment_notes}</p>
+              </div>"
+            else
+              ""
+            end
+
+            html_content = "
+            <div style='padding: 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;'>
+              <h3 style='margin-top: 0; margin-bottom: 15px; color: #4caf50; font-size: 20px;'>
+                ✅ Invoice Marked as Paid
+              </h3>
+
+              <p style='margin: 0 0 20px 0; color: #555; font-size: 14px;'>
+                Invoice <strong>##{invoice.invoice_number}</strong> from <strong>#{company.company_name}</strong> has been marked as paid.
+              </p>
+
+              <div style='background-color: #f5f5f5; border-radius: 6px; padding: 15px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 10px 0; font-size: 12px; color: #757575; text-transform: uppercase; font-weight: 600;'>Payment Details</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Invoice Amount:</strong> €#{formatted_invoice_amount}</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Payment Received:</strong> €#{formatted_payment_amount}</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Payment Date:</strong> #{payment_date_parsed.strftime('%B %d, %Y')}</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Due Date:</strong> #{invoice.due_date.strftime('%B %d, %Y')}</p>
+                <p style='margin: 0; color: #555; font-size: 14px;'><strong>Method:</strong> #{payment_method_label}</p>
+              </div>
+
+              #{delay_html}
+              #{partial_payment_html}
+              #{factoring_html}
+              #{payment_ref_html}
+              #{notes_html}
+
+              <div style='margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;'>
+                <p style='margin: 0; color: #757575; font-size: 12px;'>
+                  <strong>Invoice Status:</strong> #{invoice.payment_status.humanize} |
+                  <strong>Payment Delay:</strong> #{payment_delay} day#{payment_delay.abs > 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            "
+
+            result_builder.success(
+              message: "Invoice marked as paid successfully",
+              options: { html: html_content }
+            )
+          end
+        )
       end
     end
   end
