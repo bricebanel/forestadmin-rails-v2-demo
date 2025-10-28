@@ -794,6 +794,224 @@ module ForestAdminRails
           end
         )
       end
+
+      # Add "Approve factoring request" smart action to FactoringOperation collection
+      @create_agent.customize_collection('FactoringOperation') do |collection|
+        collection.add_action(
+          'Approve factoring request',
+          BaseAction.new(
+            scope: ActionScope::SINGLE,
+            description: "Approve a factoring request and mark it ready for funding",
+            submit_button_label: "✅ Approve & Continue",
+            form: [
+              {
+                type: FieldType::NUMBER,
+                label: "Risk Score (0-100)",
+                id: "risk_score",
+                description: "Risk assessment for this factoring operation",
+                is_required: true,
+                value: 50
+              },
+              {
+                type: FieldType::NUMBER,
+                label: "Advance Rate (%)",
+                id: "advance_rate",
+                description: "Percentage of invoice to advance (leave blank to keep current rate)",
+                is_required: false
+              },
+              {
+                type: FieldType::NUMBER,
+                label: "Fee Rate (%)",
+                id: "fee_rate",
+                description: "Factoring fee percentage (leave blank to keep current rate)",
+                is_required: false
+              },
+              {
+                type: FieldType::STRING,
+                label: "Approver Name",
+                id: "approver_name",
+                description: "Your name as the approver",
+                is_required: true
+              },
+              {
+                type: FieldType::STRING,
+                label: "Approval Notes",
+                id: "approval_notes",
+                description: "Justification for approving this factoring request",
+                is_required: true,
+                widget: 'TextArea'
+              }
+            ]
+          ) do |context, result_builder|
+            # 1. Fetch the factoring operation data from Forest Admin
+            operation_record = context.get_record([
+              'id', 'status', 'company_id', 'invoice_id', 'invoice_amount',
+              'advance_rate', 'fee_rate', 'advance_amount', 'fee_amount', 'net_amount'
+            ])
+
+            # 2. Get the ActiveRecord model instance
+            operation = FactoringOperation.find(operation_record['id'])
+            company = operation.company
+            invoice = operation.invoice
+
+            # 3. Validate: Only pending or under_review status can be approved
+            unless ['pending', 'under_review'].include?(operation.status)
+              next result_builder.error(
+                message: "❌ Cannot approve: This factoring operation has status '#{operation.status}'. " \
+                         "Only 'pending' or 'under_review' operations can be approved."
+              )
+            end
+
+            # 4. Validate: Company must have sufficient available credit
+            available_credit = company.available_credit
+            if available_credit < operation.advance_amount
+              formatted_available = available_credit.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+              formatted_needed = operation.advance_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+              next result_builder.error(
+                message: "❌ Insufficient credit: #{company.company_name} has only €#{formatted_available} available, " \
+                         "but this operation requires €#{formatted_needed}."
+              )
+            end
+
+            # 5. Get form values
+            risk_score = context.get_form_value('risk_score')
+            new_advance_rate = context.get_form_value('advance_rate')
+            new_fee_rate = context.get_form_value('fee_rate')
+            approver_name = context.get_form_value('approver_name')
+            approval_notes = context.get_form_value('approval_notes')
+
+            # 6. Validate risk score
+            if risk_score < 0 || risk_score > 100
+              next result_builder.error(message: "❌ Risk score must be between 0 and 100")
+            end
+
+            # 7. Update operation with new rates if provided, which will trigger recalculation
+            update_params = { risk_score: risk_score }
+            update_params[:advance_rate] = new_advance_rate if new_advance_rate.present?
+            update_params[:fee_rate] = new_fee_rate if new_fee_rate.present?
+
+            operation.update!(update_params)
+
+            # 8. Approve the operation (uses the model's approve! method)
+            operation.approve!(approver_name)
+
+            # 9. Reload to get recalculated amounts
+            operation.reload
+
+            # 10. Log the approval action
+            Rails.logger.info(
+              "Factoring operation approved: Operation ID #{operation.id} - " \
+              "Company: #{company.company_name} - Invoice: #{invoice.invoice_number} - " \
+              "Risk Score: #{risk_score} - Approver: #{approver_name} - Notes: #{approval_notes}"
+            )
+
+            # 11. Build HTML success modal
+            # Format amounts with thousands separator
+            formatted_invoice_amount = operation.invoice_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_advance_amount = operation.advance_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_fee_amount = operation.fee_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+            formatted_net_amount = operation.net_amount.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+
+            # Risk score badge color
+            risk_color = if risk_score >= 70
+              '#f44336'  # Red for high risk
+            elsif risk_score >= 50
+              '#ff9800'  # Orange for medium risk
+            else
+              '#4caf50'  # Green for low risk
+            end
+
+            risk_label = if risk_score >= 70
+              'High Risk'
+            elsif risk_score >= 50
+              'Medium Risk'
+            else
+              'Low Risk'
+            end
+
+            html_content = "
+            <div style='padding: 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;'>
+              <h3 style='margin-top: 0; margin-bottom: 15px; color: #4caf50; font-size: 20px;'>
+                ✅ Factoring Request Approved
+              </h3>
+
+              <p style='margin: 0 0 20px 0; color: #555; font-size: 14px;'>
+                The factoring operation for <strong>#{company.company_name}</strong> has been approved and is ready for funding.
+              </p>
+
+              <div style='background-color: #f5f5f5; border-radius: 6px; padding: 15px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 10px 0; font-size: 12px; color: #757575; text-transform: uppercase; font-weight: 600;'>Operation Details</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Company:</strong> #{company.company_name}</p>
+                <p style='margin: 0 0 5px 0; color: #555; font-size: 14px;'><strong>Invoice:</strong> #{invoice.invoice_number}</p>
+                <p style='margin: 0; color: #555; font-size: 14px;'><strong>Invoice Date:</strong> #{invoice.invoice_date.strftime('%B %d, %Y')}</p>
+              </div>
+
+              <div style='background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 4px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 12px 0; font-size: 13px; color: #2e7d32; font-weight: 600; text-transform: uppercase;'>Financial Breakdown</p>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
+                  <span style='color: #555; font-size: 14px;'>Invoice Amount:</span>
+                  <span style='color: #2c3e50; font-size: 14px; font-weight: 600;'>€#{formatted_invoice_amount}</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
+                  <span style='color: #555; font-size: 14px;'>Advance Rate:</span>
+                  <span style='color: #2c3e50; font-size: 14px; font-weight: 600;'>#{operation.advance_rate}%</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
+                  <span style='color: #555; font-size: 14px;'>Advance Amount:</span>
+                  <span style='color: #2c3e50; font-size: 14px; font-weight: 600;'>€#{formatted_advance_amount}</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
+                  <span style='color: #555; font-size: 14px;'>Fee Rate:</span>
+                  <span style='color: #2c3e50; font-size: 14px; font-weight: 600;'>#{operation.fee_rate}%</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 12px;'>
+                  <span style='color: #555; font-size: 14px;'>Fee Amount:</span>
+                  <span style='color: #d32f2f; font-size: 14px; font-weight: 600;'>-€#{formatted_fee_amount}</span>
+                </div>
+                <div style='border-top: 2px solid #4caf50; padding-top: 12px; display: flex; justify-content: space-between;'>
+                  <span style='color: #2e7d32; font-size: 16px; font-weight: 600;'>Net Amount to Company:</span>
+                  <span style='color: #2e7d32; font-size: 18px; font-weight: 700;'>€#{formatted_net_amount}</span>
+                </div>
+              </div>
+
+              <div style='background-color: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin-bottom: 20px;'>
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                  <div>
+                    <p style='margin: 0 0 5px 0; font-size: 12px; color: #757575; text-transform: uppercase; font-weight: 600;'>Risk Assessment</p>
+                    <p style='margin: 0; font-size: 24px; font-weight: 700; color: #{risk_color};'>#{risk_score}/100</p>
+                  </div>
+                  <div style='background-color: #{risk_color}; color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;'>
+                    #{risk_label}
+                  </div>
+                </div>
+              </div>
+
+              <div style='background-color: #e3f2fd; border-left: 3px solid #2196f3; padding: 12px; border-radius: 4px; margin-bottom: 20px;'>
+                <p style='margin: 0 0 8px 0; font-weight: 600; color: #1565c0; font-size: 13px; text-transform: uppercase;'>Approval Notes</p>
+                <p style='margin: 0; color: #333; font-size: 14px; line-height: 1.5;'>#{approval_notes}</p>
+              </div>
+
+              <div style='background-color: #fff8e1; border-left: 4px solid #ffa726; padding: 15px; border-radius: 4px; margin-bottom: 20px;'>
+                <p style='margin: 0; color: #e65100; font-size: 14px;'>
+                  ⚠️ <strong>Next Step:</strong> Use the \"Fund Operation\" action to release the advance payment to the company's account.
+                </p>
+              </div>
+
+              <div style='margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;'>
+                <p style='margin: 0; color: #757575; font-size: 12px;'>
+                  <strong>Approved by:</strong> #{approver_name} on #{operation.approved_at.strftime('%B %d, %Y at %H:%M')}
+                </p>
+              </div>
+            </div>
+            "
+
+            result_builder.success(
+              message: "Factoring request approved successfully",
+              options: { html: html_content }
+            )
+          end
+        )
+      end
     end
   end
 end

@@ -1138,7 +1138,84 @@
       "segments": []
     },
     {
-      "actions": [],
+      "actions": [
+        {
+          "id": "FactoringOperation-0-approve-factoring-request",
+          "name": "Approve factoring request",
+          "submitButtonLabel": "✅ Approve & Continue",
+          "description": "Approve a factoring request and mark it ready for funding",
+          "type": "single",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/FactoringOperation/0/approve-factoring-request",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Risk assessment for this factoring operation",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "risk_score",
+              "label": "Risk Score (0-100)",
+              "widgetEdit": null,
+              "type": "Number",
+              "defaultValue": 50
+            },
+            {
+              "description": "Percentage of invoice to advance (leave blank to keep current rate)",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "advance_rate",
+              "label": "Advance Rate (%)",
+              "widgetEdit": null,
+              "type": "Number",
+              "defaultValue": null
+            },
+            {
+              "description": "Factoring fee percentage (leave blank to keep current rate)",
+              "isRequired": false,
+              "isReadOnly": false,
+              "field": "fee_rate",
+              "label": "Fee Rate (%)",
+              "widgetEdit": null,
+              "type": "Number",
+              "defaultValue": null
+            },
+            {
+              "description": "Your name as the approver",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "approver_name",
+              "label": "Approver Name",
+              "widgetEdit": null,
+              "type": "String",
+              "defaultValue": null
+            },
+            {
+              "description": "Justification for approving this factoring request",
+              "isRequired": true,
+              "isReadOnly": false,
+              "field": "approval_notes",
+              "label": "Approval Notes",
+              "widgetEdit": {
+                "name": "text area editor",
+                "parameters": {
+                  "placeholder": null,
+                  "rows": null
+                }
+              },
+              "type": "String",
+              "defaultValue": null
+            }
+          ],
+          "hooks": {
+            "load": false,
+            "change": [
+              "changeHook"
+            ]
+          }
+        }
+      ],
       "fields": [
         {
           "defaultValue": null,
