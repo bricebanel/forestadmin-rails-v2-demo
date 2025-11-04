@@ -1,7 +1,7 @@
 {
   "meta": {
     "liana": "agent-ruby",
-    "liana_version": "1.12.9",
+    "liana_version": "1.13.1",
     "stack": {
       "engine": "ruby",
       "engine_version": "3.3.6"
@@ -276,9 +276,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         },
         {
@@ -312,9 +310,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         },
         {
@@ -358,9 +354,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         },
         {
@@ -484,9 +478,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           },
           "layout": [
             {
@@ -576,9 +568,7 @@
           "isVirtual": false,
           "reference": "AccountTransaction.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -792,9 +782,7 @@
           "isVirtual": false,
           "reference": "FactoringOperation.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -859,9 +847,7 @@
           "isVirtual": false,
           "reference": "Invoice.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -878,9 +864,7 @@
           "isVirtual": false,
           "reference": "KycDocument.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -999,9 +983,7 @@
           "isVirtual": false,
           "reference": "ProjectParticipant.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -1018,9 +1000,7 @@
           "isVirtual": false,
           "reference": "Project.id",
           "relationship": "BelongsToMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -1053,9 +1033,7 @@
           "isVirtual": false,
           "reference": "RetentionGuarantee.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -1210,9 +1188,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         },
         {
@@ -1266,9 +1242,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         },
         {
@@ -1330,9 +1304,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         }
       ],
@@ -1758,9 +1730,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         }
       ],
@@ -2182,9 +2152,7 @@
           ],
           "hooks": {
             "load": false,
-            "change": [
-              "changeHook"
-            ]
+            "change": ["changeHook"]
           }
         }
       ],
@@ -2477,9 +2445,7 @@
           "isVirtual": false,
           "reference": "Company.id",
           "relationship": "BelongsToMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -2581,9 +2547,7 @@
           "isVirtual": false,
           "reference": "Invoice.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -2648,9 +2612,7 @@
           "isVirtual": false,
           "reference": "ProjectParticipant.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -2683,9 +2645,7 @@
           "isVirtual": false,
           "reference": "RetentionGuarantee.id",
           "relationship": "BelongsToMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
@@ -2916,9 +2876,7 @@
           "isVirtual": false,
           "reference": "RetentionGuarantee.id",
           "relationship": "HasMany",
-          "type": [
-            "Number"
-          ],
+          "type": ["Number"],
           "validations": []
         },
         {
