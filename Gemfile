@@ -29,11 +29,11 @@ gem "jbuilder"
 gem "pg"
 gem 'dotenv-rails'
 
-gem "forest_admin_rails", "~> 1.23.0"
-gem "forest_admin_agent", "~> 1.23.0"
-gem "forest_admin_datasource_toolkit", "~> 1.23.0"
-gem "forest_admin_datasource_active_record", "~> 1.23.0"
-gem "forest_admin_datasource_customizer", "~> 1.23.0"
+gem "forest_admin_rails", "~> 1.23.1"
+gem "forest_admin_agent", "~> 1.23.1"
+gem "forest_admin_datasource_toolkit", "~> 1.23.1"
+gem "forest_admin_datasource_active_record", "~> 1.23.1"
+gem "forest_admin_datasource_customizer", "~> 1.23.1"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

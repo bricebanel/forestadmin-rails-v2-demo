@@ -149,7 +149,7 @@ GEM
       ffi (>= 1.15.5)
       rake
     filecache (1.0.3)
-    forest_admin_agent (1.23.0)
+    forest_admin_agent (1.23.1)
       activesupport (>= 6.1)
       base64
       benchmark
@@ -172,7 +172,7 @@ GEM
       rack-cors (~> 2.0)
       rake (~> 13.0)
       zeitwerk (~> 2.3)
-    forest_admin_datasource_active_record (1.23.0)
+    forest_admin_datasource_active_record (1.23.1)
       activerecord (>= 6.1)
       activesupport (>= 6.1)
       base64
@@ -184,7 +184,7 @@ GEM
       mutex_m
       ostruct
       zeitwerk (~> 2.3)
-    forest_admin_datasource_customizer (1.23.0)
+    forest_admin_datasource_customizer (1.23.1)
       activesupport (>= 6.1)
       base64
       benchmark
@@ -196,7 +196,7 @@ GEM
       mutex_m
       ostruct
       zeitwerk (~> 2.3)
-    forest_admin_datasource_toolkit (1.23.0)
+    forest_admin_datasource_toolkit (1.23.1)
       activesupport (>= 6.1)
       base64
       benchmark
@@ -207,7 +207,7 @@ GEM
       mutex_m
       ostruct
       zeitwerk (~> 2.3)
-    forest_admin_rails (1.23.0)
+    forest_admin_rails (1.23.1)
       base64
       benchmark
       bigdecimal
@@ -511,11 +511,11 @@ DEPENDENCIES
   debug
   dotenv-rails
   faker
-  forest_admin_agent (~> 1.23.0)
-  forest_admin_datasource_active_record (~> 1.23.0)
-  forest_admin_datasource_customizer (~> 1.23.0)
-  forest_admin_datasource_toolkit (~> 1.23.0)
-  forest_admin_rails (~> 1.23.0)
+  forest_admin_agent (~> 1.23.1)
+  forest_admin_datasource_active_record (~> 1.23.1)
+  forest_admin_datasource_customizer (~> 1.23.1)
+  forest_admin_datasource_toolkit (~> 1.23.1)
+  forest_admin_rails (~> 1.23.1)
   importmap-rails
   jbuilder
   pg
