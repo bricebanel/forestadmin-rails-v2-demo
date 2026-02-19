@@ -3,18 +3,18 @@ class KycDocument < ApplicationRecord
 
   # Enums
   enum document_type: {
-    kbis: 'kbis',                                           # Extract K-bis (company registration)
-    attestation_vigilance: 'attestation_vigilance',         # URSSAF certificate
-    rcc: 'rcc',                                             # RCC (civil liability insurance)
-    attestation_assurance: 'attestation_assurance',         # Insurance certificate
-    rib: 'rib',                                             # Bank details (RIB)
-    carte_identite: 'carte_identite',                       # ID card of legal representative
-    statuts: 'statuts',                                     # Company statutes
-    liasse_fiscale: 'liasse_fiscale',                       # Tax documents
-    bilan: 'bilan',                                         # Financial statements
-    decennale: 'decennale',                                 # 10-year insurance (specific to construction)
-    qualibat: 'qualibat',                                   # Qualibat certification (construction quality)
-    autre: 'autre'                                          # Other documents
+    kbis: 'Company Registration',
+    attestation_vigilance: 'Compliance Certificate',
+    rcc: 'Civil Liability Insurance',
+    attestation_assurance: 'Insurance Certificate',
+    rib: 'RIB',
+    carte_identite: 'ID',
+    statuts: 'Articles of Association',
+    liasse_fiscale: 'Tax Return',
+    bilan: 'Financial Statements',
+    decennale: 'Proof of Address',
+    qualibat: 'Qualibat Certificate',
+    autre: 'Other'
   }, _prefix: true
 
   enum status: {
