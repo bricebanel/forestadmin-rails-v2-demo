@@ -1694,7 +1694,7 @@ onboarding_companies.each do |company|
   # Common documents for all companies
   common_docs = [
     {
-      document_type: 'kbis',
+      document_type: 'company_registration',
       status: 'approved',
       uploaded_at: base_upload_date + rand(1..5).days,
       reviewed_at: base_upload_date + rand(6..10).days,
@@ -1712,7 +1712,7 @@ onboarding_companies.each do |company|
       notes: 'RIB vérifié avec l\'IBAN fourni'
     },
     {
-      document_type: 'carte_identite',
+      document_type: 'id_document',
       status: 'approved',
       uploaded_at: base_upload_date + rand(1..5).days,
       reviewed_at: base_upload_date + rand(6..10).days,
@@ -1727,14 +1727,14 @@ onboarding_companies.each do |company|
     # Pending: all documents in pending_review status
     status_docs = [
       {
-        document_type: 'attestation_vigilance',
+        document_type: 'compliance_certificate',
         status: 'pending_review',
         uploaded_at: base_upload_date + rand(1..3).days,
         file_size_kb: rand(150..350),
         notes: 'En attente de vérification'
       },
       {
-        document_type: 'rcc',
+        document_type: 'civil_liability_insurance',
         status: 'pending_review',
         uploaded_at: base_upload_date + rand(1..3).days,
         file_size_kb: rand(200..500),
@@ -1742,14 +1742,14 @@ onboarding_companies.each do |company|
         notes: 'RC Pro en cours de validation'
       },
       {
-        document_type: 'bilan',
+        document_type: 'financial_statements',
         status: 'pending_review',
         uploaded_at: base_upload_date + rand(1..3).days,
         file_size_kb: rand(500..1200),
         notes: 'Bilan comptable N-1 à vérifier'
       },
       {
-        document_type: 'decennale',
+        document_type: 'proof_of_address',
         status: 'pending_review',
         uploaded_at: base_upload_date + rand(1..3).days,
         file_size_kb: rand(300..600),
@@ -1761,7 +1761,7 @@ onboarding_companies.each do |company|
     # Escalated: mix of approved, rejected, and pending documents
     status_docs = [
       {
-        document_type: 'attestation_vigilance',
+        document_type: 'compliance_certificate',
         status: 'rejected',
         uploaded_at: base_upload_date + rand(1..5).days,
         reviewed_at: base_upload_date + rand(6..10).days,
@@ -1771,7 +1771,7 @@ onboarding_companies.each do |company|
         notes: 'URSSAF - Document périmé'
       },
       {
-        document_type: 'rcc',
+        document_type: 'civil_liability_insurance',
         status: 'approved',
         uploaded_at: base_upload_date + rand(1..5).days,
         reviewed_at: base_upload_date + rand(6..10).days,
@@ -1781,7 +1781,7 @@ onboarding_companies.each do |company|
         notes: 'RC Pro validée - Montant de garantie: 2M€'
       },
       {
-        document_type: 'bilan',
+        document_type: 'financial_statements',
         status: 'rejected',
         uploaded_at: base_upload_date + rand(1..5).days,
         reviewed_at: base_upload_date + rand(6..10).days,
@@ -1791,7 +1791,7 @@ onboarding_companies.each do |company|
         notes: 'Bilan N-1 incomplet'
       },
       {
-        document_type: 'decennale',
+        document_type: 'proof_of_address',
         status: 'pending_review',
         uploaded_at: base_upload_date + rand(1..3).days,
         file_size_kb: rand(300..600),
@@ -1799,7 +1799,7 @@ onboarding_companies.each do |company|
         notes: 'Nouvelle version soumise suite à rejet'
       },
       {
-        document_type: 'qualibat',
+        document_type: 'qualibat_certificate',
         status: 'approved',
         uploaded_at: base_upload_date + rand(1..5).days,
         reviewed_at: base_upload_date + rand(6..10).days,

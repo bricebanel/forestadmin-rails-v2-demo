@@ -558,18 +558,18 @@ module ForestAdminRails
             values: proc { |records|
               # Document type labels mapping
               doc_labels_map = {
-                'kbis' => 'Company Registration',
-                'attestation_vigilance' => 'Compliance Certificate',
-                'rcc' => 'Civil Liability Insurance',
-                'attestation_assurance' => 'Insurance Certificate',
-                'rib' => 'RIB',
-                'carte_identite' => 'ID',
-                'statuts' => 'Articles of Association',
-                'liasse_fiscale' => 'Tax Return',
-                'bilan' => 'Financial Statements',
-                'decennale' => 'Proof of Address',
-                'qualibat' => 'Qualibat Certificate',
-                'autre' => 'Other'
+                'company_registration'     => 'Company Registration',
+                'compliance_certificate'   => 'Compliance Certificate',
+                'civil_liability_insurance' => 'Civil Liability Insurance',
+                'insurance_certificate'    => 'Insurance Certificate',
+                'rib'                      => 'RIB',
+                'id_document'              => 'ID',
+                'articles_of_association'  => 'Articles of Association',
+                'tax_return'               => 'Tax Return',
+                'financial_statements'     => 'Financial Statements',
+                'proof_of_address'         => 'Proof of Address',
+                'qualibat_certificate'     => 'Qualibat Certificate',
+                'other'                    => 'Other'
               }
 
               records.map do |record|
@@ -708,18 +708,18 @@ module ForestAdminRails
 
             # Document type labels mapping
             doc_labels_map = {
-              'kbis' => 'Company Registration',
-              'attestation_vigilance' => 'Compliance Certificate',
-              'rcc' => 'Civil Liability Insurance',
-              'attestation_assurance' => 'Insurance Certificate',
-              'rib' => 'RIB',
-              'carte_identite' => 'ID',
-              'statuts' => 'Articles of Association',
-              'liasse_fiscale' => 'Tax Return',
-              'bilan' => 'Financial Statements',
-              'decennale' => 'Proof of Address',
-              'qualibat' => 'Qualibat Certificate',
-              'autre' => 'Other'
+              'company_registration'     => 'Company Registration',
+              'compliance_certificate'   => 'Compliance Certificate',
+              'civil_liability_insurance' => 'Civil Liability Insurance',
+              'insurance_certificate'    => 'Insurance Certificate',
+              'rib'                      => 'RIB',
+              'id_document'              => 'ID',
+              'articles_of_association'  => 'Articles of Association',
+              'tax_return'               => 'Tax Return',
+              'financial_statements'     => 'Financial Statements',
+              'proof_of_address'         => 'Proof of Address',
+              'qualibat_certificate'     => 'Qualibat Certificate',
+              'other'                    => 'Other'
             }
             doc_label = doc_labels_map[document.document_type] || document.document_type.capitalize
 
