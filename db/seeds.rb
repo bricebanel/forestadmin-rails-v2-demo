@@ -32,7 +32,8 @@ companies_data = [
     employee_count: 35,
     registration_date: 5.years.ago,
     iban: "FR7630006000011234567890189",
-    logo_url: "https://via.placeholder.com/150/0066cc/ffffff?text=BM"
+    logo_url: "https://via.placeholder.com/150/0066cc/ffffff?text=BM",
+    legal_representative_dob: Date.new(1972, 3, 15)
   },
   {
     company_name: "Électricité Parisienne SARL",
@@ -52,7 +53,8 @@ companies_data = [
     employee_count: 22,
     registration_date: 3.years.ago,
     iban: "FR7612345678901234567890123",
-    logo_url: "https://via.placeholder.com/150/ff6600/ffffff?text=EP"
+    logo_url: "https://via.placeholder.com/150/ff6600/ffffff?text=EP",
+    legal_representative_dob: Date.new(1984, 7, 22)
   },
   {
     company_name: "Plomberie du Sud-Ouest",
@@ -72,7 +74,8 @@ companies_data = [
     employee_count: 12,
     registration_date: 2.years.ago,
     iban: "FR7698765432109876543210987",
-    logo_url: "https://via.placeholder.com/150/00cc66/ffffff?text=PSO"
+    logo_url: "https://via.placeholder.com/150/00cc66/ffffff?text=PSO",
+    legal_representative_dob: Date.new(1978, 11, 8)
   },
   {
     company_name: "Menuiserie Artisanale de Provence",
@@ -92,7 +95,8 @@ companies_data = [
     employee_count: 15,
     registration_date: 7.years.ago,
     iban: "FR7611223344556677889900112",
-    logo_url: "https://via.placeholder.com/150/996633/ffffff?text=MAP"
+    logo_url: "https://via.placeholder.com/150/996633/ffffff?text=MAP",
+    legal_representative_dob: Date.new(1981, 4, 30)
   },
   {
     company_name: "Travaux Publics Nord",
@@ -112,7 +116,8 @@ companies_data = [
     employee_count: 45,
     registration_date: 8.years.ago,
     iban: "FR7622334455667788990011223",
-    logo_url: "https://via.placeholder.com/150/cc0000/ffffff?text=TPN"
+    logo_url: "https://via.placeholder.com/150/cc0000/ffffff?text=TPN",
+    legal_representative_dob: Date.new(1969, 9, 14)
   },
   {
     company_name: "Couverture Toulousaine",
@@ -132,7 +137,8 @@ companies_data = [
     employee_count: 14,
     registration_date: 4.years.ago,
     iban: "FR7633445566778899001122334",
-    logo_url: "https://via.placeholder.com/150/9933cc/ffffff?text=CT"
+    logo_url: "https://via.placeholder.com/150/9933cc/ffffff?text=CT",
+    legal_representative_dob: Date.new(1976, 12, 3)
   },
   {
     company_name: "Peinture et Décoration Nantaise",
@@ -152,7 +158,8 @@ companies_data = [
     employee_count: 9,
     registration_date: 3.years.ago,
     iban: "FR7644556677889900112233445",
-    logo_url: "https://via.placeholder.com/150/ff9900/ffffff?text=PDN"
+    logo_url: "https://via.placeholder.com/150/ff9900/ffffff?text=PDN",
+    legal_representative_dob: Date.new(1986, 6, 17)
   },
   {
     company_name: "Maçonnerie Bretonne",
@@ -172,7 +179,8 @@ companies_data = [
     employee_count: 18,
     registration_date: 6.years.ago,
     iban: "FR7655667788990011223344556",
-    logo_url: "https://via.placeholder.com/150/006699/ffffff?text=MB"
+    logo_url: "https://via.placeholder.com/150/006699/ffffff?text=MB",
+    legal_representative_dob: Date.new(1965, 2, 28)
   },
   {
     company_name: "Chauffage Climatisation Strasbourg",
@@ -192,7 +200,8 @@ companies_data = [
     employee_count: 28,
     registration_date: 5.years.ago,
     iban: "FR7666778899001122334455667",
-    logo_url: "https://via.placeholder.com/150/00ccff/ffffff?text=CCS"
+    logo_url: "https://via.placeholder.com/150/00ccff/ffffff?text=CCS",
+    legal_representative_dob: Date.new(1974, 8, 19)
   },
   {
     company_name: "Métallerie Lyonnaise",
@@ -212,7 +221,8 @@ companies_data = [
     employee_count: 11,
     registration_date: 3.years.ago,
     iban: "FR7677889900112233445566778",
-    logo_url: "https://via.placeholder.com/150/cc6600/ffffff?text=ML"
+    logo_url: "https://via.placeholder.com/150/cc6600/ffffff?text=ML",
+    legal_representative_dob: Date.new(1980, 1, 25)
   },
   {
     company_name: "Ascenseurs et Élévateurs du Rhône",
@@ -232,7 +242,8 @@ companies_data = [
     employee_count: 32,
     registration_date: 9.years.ago,
     iban: "FR7688990011223344556677889",
-    logo_url: "https://via.placeholder.com/150/9900cc/ffffff?text=AER"
+    logo_url: "https://via.placeholder.com/150/9900cc/ffffff?text=AER",
+    legal_representative_dob: Date.new(1983, 5, 11)
   },
   {
     company_name: "Carrelage et Faïence Méditerranée",
@@ -252,7 +263,8 @@ companies_data = [
     employee_count: 10,
     registration_date: 4.years.ago,
     iban: "FR7699001122334455667788990",
-    logo_url: "https://via.placeholder.com/150/33cc99/ffffff?text=CFM"
+    logo_url: "https://via.placeholder.com/150/33cc99/ffffff?text=CFM",
+    legal_representative_dob: Date.new(1977, 10, 7)
   },
   {
     company_name: "Charpente Bois Aquitaine",
@@ -272,7 +284,8 @@ companies_data = [
     employee_count: 16,
     registration_date: 7.years.ago,
     iban: "FR7600112233445566778899001",
-    logo_url: "https://via.placeholder.com/150/663300/ffffff?text=CBA"
+    logo_url: "https://via.placeholder.com/150/663300/ffffff?text=CBA",
+    legal_representative_dob: Date.new(1985, 3, 22)
   },
   {
     company_name: "Isolation Thermique Écologique",
@@ -292,7 +305,8 @@ companies_data = [
     employee_count: 13,
     registration_date: 3.years.ago,
     iban: "FR7611223344556677889900223",
-    logo_url: "https://via.placeholder.com/150/99cc00/ffffff?text=ITE"
+    logo_url: "https://via.placeholder.com/150/99cc00/ffffff?text=ITE",
+    legal_representative_dob: Date.new(1989, 7, 14)
   },
   {
     company_name: "Démolition Terrassement Parisien",
@@ -312,7 +326,8 @@ companies_data = [
     employee_count: 38,
     registration_date: 10.years.ago,
     iban: "FR7622334455667788990011334",
-    logo_url: "https://via.placeholder.com/150/cc0033/ffffff?text=DTP"
+    logo_url: "https://via.placeholder.com/150/cc0033/ffffff?text=DTP",
+    legal_representative_dob: Date.new(1971, 11, 30)
   },
   {
     company_name: "Vitrerie Miroiterie Moderne",
@@ -332,7 +347,8 @@ companies_data = [
     employee_count: 0,
     registration_date: 5.years.ago,
     iban: "FR7633445566778899001122445",
-    logo_url: "https://via.placeholder.com/150/00cccc/ffffff?text=VMM"
+    logo_url: "https://via.placeholder.com/150/00cccc/ffffff?text=VMM",
+    legal_representative_dob: Date.new(1979, 4, 8)
   },
   # === TEST COMPANIES FOR ONBOARDING DEMO ===
   {
@@ -354,7 +370,8 @@ companies_data = [
     employee_count: 45,
     registration_date: 8.years.ago,
     iban: "FR7644556677889900112233556",
-    logo_url: "https://via.placeholder.com/150/00aa44/ffffff?text=CVD"
+    logo_url: "https://via.placeholder.com/150/00aa44/ffffff?text=CVD",
+    legal_representative_dob: Date.new(1988, 9, 26)
   },
   {
     company_name: "Rénovation Express Plus",
@@ -375,7 +392,8 @@ companies_data = [
     employee_count: 18,
     registration_date: 4.years.ago,
     iban: "FR7655667788990011223344667",
-    logo_url: "https://via.placeholder.com/150/ff6600/ffffff?text=REP"
+    logo_url: "https://via.placeholder.com/150/ff6600/ffffff?text=REP",
+    legal_representative_dob: Date.new(1982, 2, 13)
   },
   {
     company_name: "Maçonnerie Artisanale Moderne",
@@ -396,7 +414,8 @@ companies_data = [
     employee_count: 6,
     registration_date: 2.years.ago,
     iban: "FR7766778899001122334455778",
-    logo_url: "https://via.placeholder.com/150/cc6600/ffffff?text=MAM"
+    logo_url: "https://via.placeholder.com/150/cc6600/ffffff?text=MAM",
+    legal_representative_dob: Date.new(1990, 6, 5)
   }
 ]
 

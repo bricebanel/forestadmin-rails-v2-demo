@@ -1,7 +1,7 @@
 {
   "meta": {
     "liana": "agent-ruby",
-    "liana_version": "1.13.1",
+    "liana_version": "1.23.1",
     "stack": {
       "engine": "ruby",
       "engine_version": "3.3.6"
@@ -903,6 +903,22 @@
           "isVirtual": false,
           "reference": null,
           "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "legal_representative_dob",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Dateonly",
           "validations": []
         },
         {
@@ -2193,18 +2209,18 @@
         {
           "defaultValue": null,
           "enums": [
-            "attestation_assurance",
-            "attestation_vigilance",
-            "autre",
-            "bilan",
-            "carte_identite",
-            "decennale",
-            "kbis",
-            "liasse_fiscale",
-            "qualibat",
-            "rcc",
+            "articles_of_association",
+            "civil_liability_insurance",
+            "company_registration",
+            "compliance_certificate",
+            "financial_statements",
+            "id_document",
+            "insurance_certificate",
+            "other",
+            "proof_of_address",
+            "qualibat_certificate",
             "rib",
-            "statuts"
+            "tax_return"
           ],
           "field": "document_type",
           "integration": null,
